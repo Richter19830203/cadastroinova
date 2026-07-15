@@ -1,0 +1,12 @@
+# Local Netlify folder
+.netlify
+
+# Dependencias e segredos - nunca versionar
+node_modules
+.env
+credenciais-responsaveis.txt
+inova transportadora dados.txt
+cadastro.xlsx
+
+# Configuracao local do Claude Code
+.claude
