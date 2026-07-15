@@ -302,94 +302,6 @@
       <p id="mensagem" class="message" role="status" aria-live="polite"></p>
     </section>
 
-    <section class="card" aria-labelledby="titulo-listagem">
-      <h2 id="titulo-listagem">Orçamentos cadastrados</h2>
-      
-      <div class="filtros">
-        <div class="filtro-grupo">
-          <label for="filtro-numero-orcamento">Buscar por nº de orçamento</label>
-          <input id="filtro-numero-orcamento" type="text" placeholder="Ex.: 2218 ou ORC-002218">
-        </div>
-
-        <div class="filtro-grupo">
-          <label for="filtro-cliente">Buscar por cliente</label>
-          <input id="filtro-cliente" type="text" placeholder="Nome ou parte do nome">
-        </div>
-
-        <div class="filtro-grupo">
-          <label for="filtro-status-orcamento">Status Orçamento</label>
-          <select id="filtro-status-orcamento">
-            <option value="">Todos</option>
-            <option value="Solicitado">Solicitado</option>
-            <option value="Em Elaboracao">Em Elaboração</option>
-            <option value="Enviado">Enviado</option>
-            <option value="Em Negociacao">Em Negociação</option>
-            <option value="Aguardando Retorno">Aguardando Retorno</option>
-            <option value="Aprovado">Aprovado</option>
-            <option value="Contratado">Contratado</option>
-            <option value="Reprovado">Reprovado</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-        </div>
-
-        <div class="filtro-grupo">
-          <label for="filtro-status-entrega">Status de Entrega</label>
-          <select id="filtro-status-entrega">
-            <option value="">Todos</option>
-            <option value="Aguardando">Aguardando</option>
-            <option value="Cancelado">Cancelado</option>
-            <option value="Coletado">Coletado</option>
-            <option value="Em Rota">Em Rota</option>
-            <option value="Em Transporte">Em Transporte</option>
-            <option value="Entregue">Entregue</option>
-            <option value="Ocorrencia">Ocorrencia</option>
-            <option value="Pedido Recebido">Pedido Recebido</option>
-            <option value="Programado">Programado</option>
-            <option value="Reagendado">Reagendado</option>
-          </select>
-        </div>
-
-        <div class="filtro-grupo">
-          <label for="filtro-data-inicio">Data inicial</label>
-          <input id="filtro-data-inicio" type="date">
-        </div>
-
-        <div class="filtro-grupo">
-          <label for="filtro-data-fim">Data final</label>
-          <input id="filtro-data-fim" type="date">
-        </div>
-
-        <div class="filtro-acoes">
-          <button class="btn-primary" type="button" id="aplicar-filtros">Aplicar filtros</button>
-          <button class="btn-secondary" type="button" id="limpar-filtros">Limpar filtros</button>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Codigo</th>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Rota</th>
-              <th>Tipo</th>
-              <th>Valor</th>
-              <th>Status Orçamento</th>
-              <th>Status Entrega</th>
-              <th>Responsável</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="orcamentos-body">
-            <tr>
-              <td colspan="10">Nenhum orçamento registrado.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
     <section class="card proposal-wrap" id="bloco-proposta" aria-labelledby="titulo-proposta-preview">
       <h2 id="titulo-proposta-preview">Pré-visualização da Proposta Comercial</h2>
       <div class="proposal-actions">
@@ -481,6 +393,94 @@
           </div>
         </div>
       </article>
+    </section>
+
+    <section class="card" aria-labelledby="titulo-listagem">
+      <h2 id="titulo-listagem">Orçamentos cadastrados</h2>
+      
+      <div class="filtros">
+        <div class="filtro-grupo">
+          <label for="filtro-numero-orcamento">Buscar por nº de orçamento</label>
+          <input id="filtro-numero-orcamento" type="text" placeholder="Ex.: 2218 ou ORC-002218">
+        </div>
+
+        <div class="filtro-grupo">
+          <label for="filtro-cliente">Buscar por cliente</label>
+          <input id="filtro-cliente" type="text" placeholder="Nome ou parte do nome">
+        </div>
+
+        <div class="filtro-grupo">
+          <label for="filtro-status-orcamento">Status Orçamento</label>
+          <select id="filtro-status-orcamento">
+            <option value="">Todos</option>
+            <option value="Solicitado">Solicitado</option>
+            <option value="Em Elaboracao">Em Elaboração</option>
+            <option value="Enviado">Enviado</option>
+            <option value="Em Negociacao">Em Negociação</option>
+            <option value="Aguardando Retorno">Aguardando Retorno</option>
+            <option value="Aprovado">Aprovado</option>
+            <option value="Contratado">Contratado</option>
+            <option value="Reprovado">Reprovado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+
+        <div class="filtro-grupo">
+          <label for="filtro-status-entrega">Status de Entrega</label>
+          <select id="filtro-status-entrega">
+            <option value="">Todos</option>
+            <option value="Aguardando">Aguardando</option>
+            <option value="Cancelado">Cancelado</option>
+            <option value="Coletado">Coletado</option>
+            <option value="Em Rota">Em Rota</option>
+            <option value="Em Transporte">Em Transporte</option>
+            <option value="Entregue">Entregue</option>
+            <option value="Ocorrencia">Ocorrencia</option>
+            <option value="Pedido Recebido">Pedido Recebido</option>
+            <option value="Programado">Programado</option>
+            <option value="Reagendado">Reagendado</option>
+          </select>
+        </div>
+
+        <div class="filtro-grupo">
+          <label for="filtro-data-inicio">Data inicial</label>
+          <input id="filtro-data-inicio" type="date">
+        </div>
+
+        <div class="filtro-grupo">
+          <label for="filtro-data-fim">Data final</label>
+          <input id="filtro-data-fim" type="date">
+        </div>
+
+        <div class="filtro-acoes">
+          <button class="btn-primary" type="button" id="aplicar-filtros">Aplicar filtros</button>
+          <button class="btn-secondary" type="button" id="limpar-filtros">Limpar filtros</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Codigo</th>
+              <th>Data</th>
+              <th>Cliente</th>
+              <th>Rota</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th>Status Orçamento</th>
+              <th>Status Entrega</th>
+              <th>Responsável</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="orcamentos-body">
+            <tr>
+              <td colspan="10">Nenhum orçamento registrado.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
     </div>
 

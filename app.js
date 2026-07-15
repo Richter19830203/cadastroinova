@@ -2130,8 +2130,8 @@
     }
 
     function preencherPropostaComDados(dados) {
-      const codigo = form.codigoEdicao.value || gerarCodigo();
-      const hoje = formatarDataIso(new Date().toISOString());
+      const codigo = dados.codigo || form.codigoEdicao.value || gerarCodigo();
+      const hoje = dados.criadoEm ? formatarDataIso(dados.criadoEm) : formatarDataIso(new Date().toISOString());
 
       document.getElementById("prop-codigo").textContent = codigo;
       document.getElementById("prop-cliente").textContent = dados.cliente || "Cliente nao informado";
@@ -2256,6 +2256,7 @@
                 <td data-label="Responsavel">${orcamento.responsavel || "-"}</td>
                 <td data-label="Acoes">
                   <div class="table-actions">
+                    <button type="button" class="btn-secondary" data-visualizar="${orcamento.codigo}">Visualizar</button>
                     <button type="button" class="btn-secondary" data-edit="${orcamento.codigo}">Editar</button>
                     <button type="button" class="btn-secondary" data-delete="${orcamento.codigo}">Excluir</button>
                   </div>
@@ -2504,9 +2505,22 @@
         return;
       }
 
+      const codigoVisualizar = botao.getAttribute("data-visualizar");
       const codigoEditar = botao.getAttribute("data-edit");
       const codigoExcluir = botao.getAttribute("data-delete");
       const lista = obterOrcamentos();
+
+      if (codigoVisualizar) {
+        const item = lista.find((orcamento) => orcamento.codigo === codigoVisualizar);
+        if (!item) {
+          mostrarMensagem("Orçamento não encontrado para visualização.", "error");
+          return;
+        }
+        preencherPropostaComDados(item);
+        blocoProposta.classList.add("active");
+        blocoProposta.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
 
       if (codigoEditar) {
         const item = lista.find((orcamento) => orcamento.codigo === codigoEditar);
