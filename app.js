@@ -1524,23 +1524,27 @@
       }
     }
 
+    function ordenarOpcoesAlfabetico(opcoes) {
+      return [...opcoes].sort((a, b) => a.descricao.localeCompare(b.descricao, "pt-BR"));
+    }
+
     function popularTodosDropdownsLookup() {
       const op = opcoesLookupCache;
 
       // Tipo de Veiculo — formulario orcamento
       if (op.tipo_veiculo && form.tipoVeiculo) {
-        _popularSelect(form.tipoVeiculo, op.tipo_veiculo, form.tipoVeiculo.value, true);
+        _popularSelect(form.tipoVeiculo, ordenarOpcoesAlfabetico(op.tipo_veiculo), form.tipoVeiculo.value, true);
       }
 
       // Tipo de Carga — formulario orcamento
       if (op.tipo_carga && form.tipoCarga) {
-        _popularSelect(form.tipoCarga, op.tipo_carga, form.tipoCarga.value, true);
+        _popularSelect(form.tipoCarga, ordenarOpcoesAlfabetico(op.tipo_carga), form.tipoCarga.value, true);
       }
 
       // Status Orcamento — formulario orcamento
       if (op.status_orcamento && form.statusOrcamento) {
         const atual = form.statusOrcamento.value;
-        form.statusOrcamento.innerHTML = op.status_orcamento
+        form.statusOrcamento.innerHTML = ordenarOpcoesAlfabetico(op.status_orcamento)
           .map((o) => `<option value="${o.codigo}"${o.codigo === atual ? " selected" : ""}>${o.descricao}</option>`)
           .join("");
         if (atual) form.statusOrcamento.value = atual;
@@ -1549,7 +1553,7 @@
       // Status Entrega — formulario orcamento
       if (op.status_entrega && form.statusEntrega) {
         const atual = form.statusEntrega.value || "Pedido Recebido";
-        form.statusEntrega.innerHTML = op.status_entrega
+        form.statusEntrega.innerHTML = ordenarOpcoesAlfabetico(op.status_entrega)
           .map((o) => `<option value="${o.codigo}"${o.codigo === atual ? " selected" : ""}>${o.descricao}</option>`)
           .join("");
         form.statusEntrega.value = atual;
@@ -1559,7 +1563,7 @@
       const filtroOrcEl = document.getElementById("filtro-status-orcamento");
       if (filtroOrcEl && op.status_orcamento) {
         const atual = filtroOrcEl.value;
-        filtroOrcEl.innerHTML = '<option value="">Todos</option>' + op.status_orcamento
+        filtroOrcEl.innerHTML = '<option value="">Todos</option>' + ordenarOpcoesAlfabetico(op.status_orcamento)
           .map((o) => `<option value="${o.codigo}"${o.codigo === atual ? " selected" : ""}>${o.descricao}</option>`)
           .join("");
         if (atual) filtroOrcEl.value = atual;
@@ -1569,7 +1573,7 @@
       const filtroEntEl = document.getElementById("filtro-status-entrega");
       if (filtroEntEl && op.status_entrega) {
         const atual = filtroEntEl.value;
-        filtroEntEl.innerHTML = '<option value="">Todos</option>' + op.status_entrega
+        filtroEntEl.innerHTML = '<option value="">Todos</option>' + ordenarOpcoesAlfabetico(op.status_entrega)
           .map((o) => `<option value="${o.codigo}"${o.codigo === atual ? " selected" : ""}>${o.descricao}</option>`)
           .join("");
         if (atual) filtroEntEl.value = atual;

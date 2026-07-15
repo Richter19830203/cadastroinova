@@ -7,6 +7,8 @@ node_modules
 credenciais-responsaveis.txt
 inova transportadora dados.txt
 cadastro.xlsx
+~$*.xlsx
+~$*.doc*
 
 # Configuracao local do Claude Code
 .claude
