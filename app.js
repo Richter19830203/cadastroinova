@@ -101,6 +101,7 @@
     const filtroTipoServico = document.getElementById("filtro-tipo-servico");
     const pesquisarTipoServicoButton = document.getElementById("pesquisar-tipo-servico");
     
+    const filtroNumeroOrcamento = document.getElementById("filtro-numero-orcamento");
     const filtroCliente = document.getElementById("filtro-cliente");
     const filtroStatusOrcamento = document.getElementById("filtro-status-orcamento");
     const filtroStatusEntrega = document.getElementById("filtro-status-entrega");
@@ -326,6 +327,7 @@
     };
 
     let filtrosAtivos = {
+      numeroOrcamento: "",
       cliente: "",
       statusOrcamento: "",
       statusEntrega: "",
@@ -980,6 +982,16 @@
 
     function filtrarOrcamentos(orcamentos) {
       return orcamentos.filter((orcamento) => {
+        // Filtro numero/codigo do orcamento
+        if (filtrosAtivos.numeroOrcamento) {
+          const termo = filtrosAtivos.numeroOrcamento.toLowerCase();
+          const numeroTexto = orcamento.numero != null ? String(orcamento.numero) : "";
+          const codigoTexto = (orcamento.codigo || "").toLowerCase();
+          if (!numeroTexto.includes(termo) && !codigoTexto.includes(termo)) {
+            return false;
+          }
+        }
+
         // Filtro cliente
         if (filtrosAtivos.cliente) {
           if (!orcamento.cliente.toLowerCase().includes(filtrosAtivos.cliente.toLowerCase())) {
@@ -2215,7 +2227,14 @@
         tbody.innerHTML = "<tr><td colspan='10'>Nenhum orcamento encontrado com os filtros aplicados.</td></tr>";
       } else {
         const html = orcamentosFiltrados
-          .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm))
+          .sort((a, b) => {
+            const numeroA = Number(a.numero);
+            const numeroB = Number(b.numero);
+            if (Number.isFinite(numeroA) && Number.isFinite(numeroB) && numeroA !== numeroB) {
+              return numeroB - numeroA;
+            }
+            return new Date(b.criadoEm) - new Date(a.criadoEm);
+          })
           .map((orcamento) => {
             const origemCompleta = `${orcamento.origem || "-"}/${(orcamento.origemUF || extrairUF(orcamento.origem)) || "-"}`;
             const destinoCompleta = `${orcamento.destino || "-"}/${(orcamento.destinoUF || extrairUF(orcamento.destino)) || "-"}`;
@@ -3218,26 +3237,29 @@
     });
 
     aplicarFiltrosButton.addEventListener("click", () => {
+      filtrosAtivos.numeroOrcamento = filtroNumeroOrcamento.value.trim();
       filtrosAtivos.cliente = filtroCliente.value.trim();
       filtrosAtivos.statusOrcamento = filtroStatusOrcamento.value;
       filtrosAtivos.statusEntrega = filtroStatusEntrega.value;
       filtrosAtivos.dataInicio = filtroDataInicio.value ? obterDataISO(filtroDataInicio.value) : null;
       filtrosAtivos.dataFim = filtroDataFim.value ? obterDataISO(filtroDataFim.value) : null;
 
-      if (filtrosAtivos.cliente || filtrosAtivos.statusOrcamento || filtrosAtivos.statusEntrega || filtrosAtivos.dataInicio || filtrosAtivos.dataFim) {
+      if (filtrosAtivos.numeroOrcamento || filtrosAtivos.cliente || filtrosAtivos.statusOrcamento || filtrosAtivos.statusEntrega || filtrosAtivos.dataInicio || filtrosAtivos.dataFim) {
         mostrarMensagem("Filtros aplicados com sucesso.");
       }
       renderizarTabela();
     });
 
     limparFiltrosButton.addEventListener("click", () => {
+      filtroNumeroOrcamento.value = "";
       filtroCliente.value = "";
       filtroStatusOrcamento.value = "";
       filtroStatusEntrega.value = "";
       filtroDataInicio.value = "";
       filtroDataFim.value = "";
-      
+
       filtrosAtivos = {
+        numeroOrcamento: "",
         cliente: "",
         statusOrcamento: "",
         statusEntrega: "",
@@ -3250,6 +3272,12 @@
     });
 
     // Aplicar filtros ao pressionar Enter nos campos de entrada
+    filtroNumeroOrcamento.addEventListener("keypress", (event) => {
+      if (event.key === "Enter") {
+        aplicarFiltrosButton.click();
+      }
+    });
+
     filtroCliente.addEventListener("keypress", (event) => {
       if (event.key === "Enter") {
         aplicarFiltrosButton.click();
