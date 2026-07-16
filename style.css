@@ -1217,6 +1217,13 @@
       }
 
       /* Modo de impressao dos graficos (PDF) */
+      body.imprimindo-grafico #painel-graficos,
+      body.imprimindo-grafico #painel-graficos * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+
       body.imprimindo-grafico #painel-orcamentos,
       body.imprimindo-grafico .proposal-wrap,
       body.imprimindo-grafico .proposal-wrap.active {
