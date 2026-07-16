@@ -41,9 +41,11 @@
     const tabOrcamentos = document.getElementById("tab-orcamentos");
     const tabCadastro = document.getElementById("tab-cadastro");
     const tabFinanceiro = document.getElementById("tab-financeiro");
+    const tabGraficos = document.getElementById("tab-graficos");
     const painelOrcamentos = document.getElementById("painel-orcamentos");
     const painelCadastro = document.getElementById("painel-cadastro");
     const painelFinanceiro = document.getElementById("painel-financeiro");
+    const painelGraficos = document.getElementById("painel-graficos");
     const cadastroTipoSeletor = document.getElementById("cadastroTipoSeletor");
     const cadastroConteudoClientes = document.getElementById("cadastro-conteudo-clientes");
     const cadastroConteudoResponsaveis = document.getElementById("cadastro-conteudo-responsaveis");
@@ -344,15 +346,19 @@
       const mostrarOrcamentos = aba === "orcamentos";
       const mostrarCadastro = aba === "cadastro";
       const mostrarFinanceiro = aba === "financeiro";
+      const mostrarGraficos = aba === "graficos";
       painelOrcamentos.classList.toggle("active", mostrarOrcamentos);
       painelCadastro.classList.toggle("active", mostrarCadastro);
       painelFinanceiro.classList.toggle("active", mostrarFinanceiro);
+      painelGraficos.classList.toggle("active", mostrarGraficos);
       tabOrcamentos.classList.toggle("active", mostrarOrcamentos);
       tabCadastro.classList.toggle("active", mostrarCadastro);
       tabFinanceiro.classList.toggle("active", mostrarFinanceiro);
+      tabGraficos.classList.toggle("active", mostrarGraficos);
       tabOrcamentos.setAttribute("aria-selected", String(mostrarOrcamentos));
       tabCadastro.setAttribute("aria-selected", String(mostrarCadastro));
       tabFinanceiro.setAttribute("aria-selected", String(mostrarFinanceiro));
+      tabGraficos.setAttribute("aria-selected", String(mostrarGraficos));
     }
 
     function alternarModuloFinanceiro(modulo) {
@@ -2255,10 +2261,10 @@
                 <td data-label="Status Entrega"><span class="status ${statusEntregaClass}">${orcamento.statusEntrega || "-"}</span></td>
                 <td data-label="Responsavel">${orcamento.responsavel || "-"}</td>
                 <td data-label="Acoes">
-                  <div class="table-actions">
-                    <button type="button" class="btn-secondary" data-visualizar="${orcamento.codigo}">Visualizar</button>
-                    <button type="button" class="btn-secondary" data-edit="${orcamento.codigo}">Editar</button>
-                    <button type="button" class="btn-secondary" data-delete="${orcamento.codigo}">Excluir</button>
+                  <div class="table-actions acoes-icones">
+                    <button type="button" class="btn-icone" data-visualizar="${orcamento.codigo}" title="Visualizar" aria-label="Visualizar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                    <button type="button" class="btn-icone" data-edit="${orcamento.codigo}" title="Editar" aria-label="Editar"><svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg></button>
+                    <button type="button" class="btn-icone excluir" data-delete="${orcamento.codigo}" title="Excluir" aria-label="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
                   </div>
                 </td>
               </tr>
@@ -2372,6 +2378,11 @@
     tabFinanceiro.addEventListener("click", () => {
       alternarAba("financeiro");
       alternarModuloFinanceiro(financeiroModuloSeletor.value);
+    });
+
+    tabGraficos.addEventListener("click", () => {
+      alternarAba("graficos");
+      abrirAbaGraficos();
     });
 
     cadastroTipoSeletor.addEventListener("change", () => {
@@ -2500,8 +2511,8 @@
     });
 
     tbody.addEventListener("click", async (event) => {
-      const botao = event.target;
-      if (!(botao instanceof HTMLButtonElement)) {
+      const botao = event.target instanceof Element ? event.target.closest("button") : null;
+      if (!botao) {
         return;
       }
 
@@ -3297,6 +3308,549 @@
         aplicarFiltrosButton.click();
       }
     });
+
+    // ============================================================
+    // ABA GRAFICOS
+    // ============================================================
+    const GRAF_MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    const GRAF_MESES_LONGO = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const GRAF_GRADE_UF = {
+      RR: [1, 2], AP: [1, 4],
+      AM: [2, 1], PA: [2, 3], MA: [2, 4], CE: [2, 6], RN: [2, 7],
+      AC: [3, 1], RO: [3, 2], TO: [3, 4], PI: [3, 5], PB: [3, 7],
+      MT: [4, 3], BA: [4, 5], PE: [4, 6], AL: [4, 7],
+      MS: [5, 3], GO: [5, 4], DF: [5, 5], SE: [5, 6],
+      SP: [6, 4], MG: [6, 5], ES: [6, 6],
+      PR: [7, 4], RJ: [7, 5],
+      SC: [8, 4],
+      RS: [9, 4]
+    };
+
+    let grafInicializado = false;
+    let grafAnos = [];
+    const grafPeriodoGlobal = { ano: "todos", mes: "todos" };
+    const grafPeriodos = {
+      mes: { ano: "todos", mes: "todos" },
+      funil: { ano: "todos", mes: "todos" },
+      conversao: { ano: "todos", mes: "todos" },
+      resp: { ano: "todos", mes: "todos" },
+      despesas: { ano: "todos", mes: "todos" },
+      mapa: { ano: "todos", mes: "todos" }
+    };
+    let grafStatusResp = "__todos__";
+    let grafModoDespesa = "categoria";
+    let grafPontoMapa = "origem";
+
+    function grafAnoMesDe(dataIso) {
+      const texto = String(dataIso || "");
+      const m = texto.match(/^(\d{4})-(\d{2})/);
+      return m ? { ano: m[1], mes: m[2] } : null;
+    }
+
+    function grafDentroDoPeriodo(dataIso, p) {
+      const am = grafAnoMesDe(dataIso);
+      if (!am) return false;
+      if (p.ano !== "todos" && am.ano !== p.ano) return false;
+      if (p.mes !== "todos" && am.mes !== p.mes) return false;
+      return true;
+    }
+
+    function grafCalcularAnos() {
+      const anos = new Set();
+      obterOrcamentos().forEach((o) => {
+        const am = grafAnoMesDe(o.criadoEm);
+        if (am) anos.add(am.ano);
+      });
+      obterDespesas().forEach((d) => {
+        const am = grafAnoMesDe(d.dataDespesa);
+        if (am) anos.add(am.ano);
+      });
+      const lista = Array.from(anos).sort();
+      return lista.length > 0 ? lista : [String(new Date().getFullYear())];
+    }
+
+    function grafRotuloPeriodo(p) {
+      if (p.ano === "todos" && p.mes === "todos") return "todo o período";
+      if (p.ano === "todos") return GRAF_MESES_LONGO[Number(p.mes) - 1] + " (todos os anos)";
+      if (p.mes === "todos") return p.ano;
+      return GRAF_MESES_LONGO[Number(p.mes) - 1] + "/" + p.ano;
+    }
+
+    function grafTilesHTML(itens) {
+      return itens
+        .map((t) => `<div class="graf-tile"><small>${t.rotulo}</small><strong>${t.valor}</strong>${t.extra ? ` <span class="mini">${t.extra}</span>` : ""}</div>`)
+        .join("");
+    }
+
+    function grafFormatarNumero(v) {
+      return Number(v || 0).toLocaleString("pt-BR");
+    }
+
+    function grafMontarControle(containerId, chave, aoMudar, ehGlobal) {
+      const el = document.getElementById(containerId);
+      const p = ehGlobal ? grafPeriodoGlobal : grafPeriodos[chave];
+      el.innerHTML = `
+        <label>Ano:</label>
+        <div class="graf-seg graf-seg-ano">
+          ${grafAnos.map((a) => `<button type="button" data-ano="${a}" class="${p.ano === a ? "on" : ""}">${a}</button>`).join("")}
+          <button type="button" data-ano="todos" class="${p.ano === "todos" ? "on" : ""}">Todos</button>
+        </div>
+        <label>Mês:</label>
+        <select class="graf-sel-mes">
+          <option value="todos" ${p.mes === "todos" ? "selected" : ""}>Todos</option>
+          ${GRAF_MESES.map((m, i) => {
+            const v = String(i + 1).padStart(2, "0");
+            return `<option value="${v}" ${p.mes === v ? "selected" : ""}>${m}</option>`;
+          }).join("")}
+        </select>
+        ${ehGlobal ? '<button class="btn-aplicar-global" type="button">Aplicar em todos os gráficos</button><button class="btn-pdf" type="button" data-pdf-alvo="__todos__">Gerar PDF completo</button>' : ""}
+      `;
+
+      el.querySelector(".graf-seg-ano").addEventListener("click", (event) => {
+        const botao = event.target instanceof Element ? event.target.closest("button") : null;
+        if (!botao) return;
+        p.ano = botao.dataset.ano;
+        el.querySelectorAll(".graf-seg-ano button").forEach((b) => b.classList.toggle("on", b === botao));
+        aoMudar();
+      });
+
+      el.querySelector(".graf-sel-mes").addEventListener("change", (event) => {
+        p.mes = event.target.value;
+        aoMudar();
+      });
+
+      if (ehGlobal) {
+        el.querySelector(".btn-aplicar-global").addEventListener("click", () => {
+          Object.keys(grafPeriodos).forEach((k) => {
+            grafPeriodos[k] = { ano: grafPeriodoGlobal.ano, mes: grafPeriodoGlobal.mes };
+          });
+          grafSincronizarControles();
+          grafRenderTudo();
+        });
+      }
+    }
+
+    function grafSincronizarControles() {
+      [
+        ["graf-controle-mes", "mes"],
+        ["graf-controle-funil", "funil"],
+        ["graf-controle-conversao", "conversao"],
+        ["graf-controle-resp", "resp"],
+        ["graf-controle-despesas", "despesas"],
+        ["graf-controle-mapa", "mapa"]
+      ].forEach(([id, chave]) => {
+        const el = document.getElementById(id);
+        const p = grafPeriodos[chave];
+        el.querySelectorAll(".graf-seg-ano button").forEach((b) => b.classList.toggle("on", b.dataset.ano === p.ano));
+        el.querySelector(".graf-sel-mes").value = p.mes;
+      });
+    }
+
+    function grafRenderMes() {
+      const p = grafPeriodos.mes;
+      const dados = obterOrcamentos().filter((o) => grafDentroDoPeriodo(o.criadoEm, p));
+      let labels;
+      let valores;
+
+      if (p.ano === "todos") {
+        labels = grafAnos.slice();
+        valores = labels.map((a) => dados.filter((o) => (grafAnoMesDe(o.criadoEm) || {}).ano === a).length);
+        if (p.mes !== "todos") {
+          labels = labels.map((a) => GRAF_MESES[Number(p.mes) - 1] + "/" + a.slice(2));
+        }
+      } else if (p.mes === "todos") {
+        labels = GRAF_MESES.slice();
+        valores = labels.map((_, i) => {
+          const mesTexto = String(i + 1).padStart(2, "0");
+          return dados.filter((o) => (grafAnoMesDe(o.criadoEm) || {}).mes === mesTexto).length;
+        });
+      } else {
+        labels = [GRAF_MESES[Number(p.mes) - 1] + "/" + p.ano.slice(2)];
+        valores = [dados.length];
+      }
+
+      const total = valores.reduce((s, v) => s + v, 0);
+      const pico = Math.max(...valores, 0);
+      const idxPico = valores.indexOf(pico);
+      const ativos = valores.filter((v) => v > 0);
+      const media = total / (ativos.length || 1);
+      const menorValor = ativos.length > 1 ? Math.min(...ativos) : null;
+      const idxMenor = menorValor !== null && menorValor !== pico ? valores.indexOf(menorValor) : -1;
+      const max = Math.max(pico, 1);
+      const unidade = p.ano === "todos" ? "ano ativo" : "mês ativo";
+
+      document.getElementById("graf-tiles-mes").innerHTML = grafTilesHTML([
+        { rotulo: "Total em " + grafRotuloPeriodo(p), valor: grafFormatarNumero(total) },
+        { rotulo: "Pico" + (pico > 0 ? " (" + labels[idxPico] + ")" : ""), valor: grafFormatarNumero(pico) },
+        { rotulo: "Média por " + unidade, valor: grafFormatarNumero(Math.round(media)) }
+      ]);
+
+      document.getElementById("graf-grafico-mes").innerHTML = valores
+        .map((v, i) => {
+          const classes = ["graf-col"];
+          if (i === idxPico && v > 0) classes.push("maior", "destaque");
+          if (i === idxMenor) classes.push("menor", "destaque");
+          return `
+          <div class="${classes.join(" ")}" title="${labels[i]}: ${v} orçamento(s)">
+            <span class="valor">${v}</span>
+            <div class="barra" style="height:${Math.round((v / max) * 200)}px"></div>
+          </div>`;
+        })
+        .join("");
+
+      document.getElementById("graf-rotulos-mes").innerHTML = labels.map((l) => `<span>${l}</span>`).join("");
+
+      document.getElementById("graf-tabela-mes").innerHTML =
+        "<tr><th>Período</th>" + labels.map((l) => `<th style="text-align:center">${l}</th>`).join("") + "</tr>" +
+        "<tr><th>Orçamentos</th>" + valores.map((v, i) => {
+          let cls = "";
+          if (i === idxPico && v > 0) cls = "celula-maior";
+          else if (i === idxMenor) cls = "celula-menor";
+          return `<td class="${cls}">${v}</td>`;
+        }).join("") + "</tr>";
+    }
+
+    function grafRenderFunil() {
+      const p = grafPeriodos.funil;
+      const dados = obterOrcamentos().filter((o) => grafDentroDoPeriodo(o.criadoEm, p));
+      const porStatus = {};
+      dados.forEach((o) => {
+        const st = o.statusOrcamento || "Sem status";
+        porStatus[st] = (porStatus[st] || 0) + 1;
+      });
+      const linhas = Object.entries(porStatus).map(([status, total]) => ({ status, total })).sort((a, b) => b.total - a.total);
+
+      if (linhas.length === 0) {
+        document.getElementById("graf-tiles-funil").innerHTML = "";
+        document.getElementById("graf-grafico-funil").innerHTML = '<p class="graf-vazio">Nenhum orçamento no período escolhido.</p>';
+        document.getElementById("graf-tabela-funil").innerHTML = "";
+        return;
+      }
+
+      const total = linhas.reduce((s, l) => s + l.total, 0);
+      const media = total / linhas.length;
+      document.getElementById("graf-tiles-funil").innerHTML = grafTilesHTML([
+        { rotulo: "Total em " + grafRotuloPeriodo(p), valor: grafFormatarNumero(total) },
+        { rotulo: "Pico (" + linhas[0].status + ")", valor: grafFormatarNumero(linhas[0].total) },
+        { rotulo: "Média por status ativo", valor: grafFormatarNumero(Math.round(media)) }
+      ]);
+
+      const max = linhas[0].total;
+      document.getElementById("graf-grafico-funil").innerHTML = linhas
+        .map((f) => `
+        <div class="graf-linha" title="${f.status}: ${f.total} orçamento(s)">
+          <span class="nome">${f.status}</span>
+          <div class="trilho"><div class="preenchido" style="width:${Math.max((f.total / max) * 100, 1)}%"></div></div>
+          <span class="num">${grafFormatarNumero(f.total)}</span>
+        </div>`)
+        .join("");
+
+      document.getElementById("graf-tabela-funil").innerHTML =
+        "<tr><th>Status</th>" + linhas.map((f) => `<th style="text-align:center">${f.status}</th>`).join("") + "</tr>" +
+        "<tr><th>Orçamentos</th>" + linhas.map((f) => `<td>${f.total}</td>`).join("") + "</tr>";
+    }
+
+    function grafRenderConversao() {
+      const p = grafPeriodos.conversao;
+      const dados = obterOrcamentos().filter((o) => grafDentroDoPeriodo(o.criadoEm, p));
+      const porResp = {};
+      dados.forEach((o) => {
+        const nome = o.responsavel || "Sem responsável";
+        if (!porResp[nome]) porResp[nome] = { total: 0, aprovados: 0 };
+        porResp[nome].total += 1;
+        if (o.statusOrcamento === "Aprovado" || o.statusOrcamento === "Contratado") porResp[nome].aprovados += 1;
+      });
+      const linhas = Object.entries(porResp)
+        .map(([nome, d]) => ({ nome, total: d.total, aprovados: d.aprovados, taxa: d.total > 0 ? (d.aprovados / d.total) * 100 : 0 }))
+        .sort((a, b) => b.taxa - a.taxa);
+
+      if (linhas.length === 0) {
+        document.getElementById("graf-tiles-conversao").innerHTML = "";
+        document.getElementById("graf-grafico-conversao").innerHTML = '<p class="graf-vazio">Nenhum orçamento no período escolhido.</p>';
+        document.getElementById("graf-tabela-conversao").innerHTML = "";
+        return;
+      }
+
+      const totalGeral = linhas.reduce((s, l) => s + l.total, 0);
+      const aprovGeral = linhas.reduce((s, l) => s + l.aprovados, 0);
+      const taxaGeral = totalGeral > 0 ? (aprovGeral / totalGeral) * 100 : 0;
+
+      document.getElementById("graf-tiles-conversao").innerHTML = grafTilesHTML([
+        { rotulo: "Total em " + grafRotuloPeriodo(p), valor: grafFormatarNumero(totalGeral) },
+        { rotulo: "Pico (" + linhas[0].nome + ")", valor: linhas[0].taxa.toFixed(1).replace(".", ",") + "%" },
+        { rotulo: "Taxa média geral", valor: taxaGeral.toFixed(1).replace(".", ",") + "%", extra: aprovGeral + "/" + totalGeral }
+      ]);
+
+      const max = Math.max(...linhas.map((l) => l.taxa), 1);
+      const nomeMaior = linhas[0].taxa > 0 ? linhas[0].nome : null;
+      const nomeMenor = linhas.length > 1 ? linhas[linhas.length - 1].nome : null;
+
+      document.getElementById("graf-grafico-conversao").innerHTML = linhas
+        .map((l) => {
+          const classes = ["graf-linha"];
+          let marcador = "";
+          if (l.nome === nomeMaior) { classes.push("maior"); marcador = '<span class="marcador">▲ maior</span>'; }
+          else if (l.nome === nomeMenor) { classes.push("menor"); marcador = '<span class="marcador">▼ menor</span>'; }
+          return `
+          <div class="${classes.join(" ")}" title="${l.nome}: ${l.aprovados} aprovado(s) de ${l.total}">
+            <span class="nome">${l.nome}</span>
+            <div class="trilho"><div class="preenchido" style="width:${Math.max((l.taxa / max) * 100, l.taxa > 0 ? 1 : 0)}%"></div></div>
+            <span class="num">${l.taxa.toFixed(1).replace(".", ",")}%<span style="font-weight:600;color:var(--muted);font-size:0.72rem;"> · ${l.aprovados}/${l.total}</span>${marcador}</span>
+          </div>`;
+        })
+        .join("");
+
+      document.getElementById("graf-tabela-conversao").innerHTML =
+        "<tr><th>Responsável</th>" + linhas.map((l) => `<th style="text-align:center">${l.nome}</th>`).join("") + "</tr>" +
+        "<tr><th>Taxa</th>" + linhas.map((l) => {
+          let cls = "";
+          if (l.nome === nomeMaior) cls = "celula-maior";
+          else if (l.nome === nomeMenor) cls = "celula-menor";
+          return `<td class="${cls}">${l.taxa.toFixed(1).replace(".", ",")}%</td>`;
+        }).join("") + "</tr>" +
+        "<tr><th>Aprovados / Total</th>" + linhas.map((l) => `<td>${l.aprovados}/${l.total}</td>`).join("") + "</tr>";
+    }
+
+    function grafRenderResp() {
+      const p = grafPeriodos.resp;
+      const dados = obterOrcamentos().filter((o) => grafDentroDoPeriodo(o.criadoEm, p));
+      const porResp = {};
+      dados.forEach((o) => {
+        if (grafStatusResp !== "__todos__" && o.statusOrcamento !== grafStatusResp) return;
+        const nome = o.responsavel || "Sem responsável";
+        porResp[nome] = (porResp[nome] || 0) + 1;
+      });
+      const linhas = Object.entries(porResp).map(([nome, total]) => ({ nome, total })).sort((a, b) => b.total - a.total);
+
+      if (linhas.length === 0) {
+        document.getElementById("graf-tiles-resp").innerHTML = "";
+        document.getElementById("graf-grafico-resp").innerHTML = '<p class="graf-vazio">Nenhum orçamento no período/status escolhido.</p>';
+        document.getElementById("graf-tabela-resp").innerHTML = "";
+        return;
+      }
+
+      const total = linhas.reduce((s, l) => s + l.total, 0);
+      const media = total / linhas.length;
+      document.getElementById("graf-tiles-resp").innerHTML = grafTilesHTML([
+        { rotulo: "Total em " + grafRotuloPeriodo(p), valor: grafFormatarNumero(total) },
+        { rotulo: "Pico (" + linhas[0].nome + ")", valor: grafFormatarNumero(linhas[0].total) },
+        { rotulo: "Média por responsável ativo", valor: grafFormatarNumero(Math.round(media)) }
+      ]);
+
+      const max = linhas[0].total;
+      const nomeMaior = linhas[0].nome;
+      const nomeMenor = linhas.length > 1 ? linhas[linhas.length - 1].nome : null;
+
+      document.getElementById("graf-grafico-resp").innerHTML = linhas
+        .map((l) => {
+          const classes = ["graf-linha"];
+          let marcador = "";
+          if (l.nome === nomeMaior) { classes.push("maior"); marcador = '<span class="marcador">▲ maior</span>'; }
+          else if (l.nome === nomeMenor) { classes.push("menor"); marcador = '<span class="marcador">▼ menor</span>'; }
+          return `
+          <div class="${classes.join(" ")}" title="${l.nome}: ${l.total} orçamento(s)">
+            <span class="nome">${l.nome}</span>
+            <div class="trilho"><div class="preenchido" style="width:${Math.max((l.total / max) * 100, 1)}%"></div></div>
+            <span class="num">${grafFormatarNumero(l.total)}${marcador}</span>
+          </div>`;
+        })
+        .join("");
+
+      document.getElementById("graf-tabela-resp").innerHTML =
+        "<tr><th>Responsável</th>" + linhas.map((l) => `<th style="text-align:center">${l.nome}</th>`).join("") + "</tr>" +
+        "<tr><th>Orçamentos</th>" + linhas.map((l) => {
+          let cls = "";
+          if (l.nome === nomeMaior) cls = "celula-maior";
+          else if (l.nome === nomeMenor) cls = "celula-menor";
+          return `<td class="${cls}">${l.total}</td>`;
+        }).join("") + "</tr>";
+    }
+
+    function grafRenderDespesas() {
+      const p = grafPeriodos.despesas;
+      const dados = obterDespesas().filter((d) => grafDentroDoPeriodo(d.dataDespesa, p));
+      const porGrupo = {};
+      dados.forEach((d) => {
+        const chave = grafModoDespesa === "categoria" ? (d.categoria || "Sem categoria") : (d.centroCusto || "Sem centro de custo");
+        porGrupo[chave] = (porGrupo[chave] || 0) + Number(d.valor || 0);
+      });
+      const linhas = Object.entries(porGrupo).map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor);
+
+      if (linhas.length === 0) {
+        document.getElementById("graf-grafico-despesas").innerHTML = '<p class="graf-vazio">Nenhuma despesa lançada no período escolhido. Os lançamentos são feitos na aba Financeiro.</p>';
+        document.getElementById("graf-tabela-despesas").innerHTML = "";
+        return;
+      }
+
+      const max = Math.max(...linhas.map((l) => l.valor), 1);
+      const nomeMaior = linhas[0].nome;
+      const nomeMenor = linhas.length > 1 ? linhas[linhas.length - 1].nome : null;
+
+      document.getElementById("graf-grafico-despesas").innerHTML = linhas
+        .map((l) => {
+          const classes = ["graf-linha"];
+          let marcador = "";
+          if (l.nome === nomeMaior) { classes.push("maior"); marcador = '<span class="marcador">▲ maior</span>'; }
+          else if (l.nome === nomeMenor) { classes.push("menor"); marcador = '<span class="marcador">▼ menor</span>'; }
+          return `
+          <div class="${classes.join(" ")}" title="${l.nome}: ${formatarMoeda(l.valor)}">
+            <span class="nome">${l.nome}</span>
+            <div class="trilho"><div class="preenchido" style="width:${Math.max((l.valor / max) * 100, 1)}%"></div></div>
+            <span class="num">${formatarMoeda(l.valor)}${marcador}</span>
+          </div>`;
+        })
+        .join("");
+
+      document.getElementById("graf-tabela-despesas").innerHTML =
+        "<tr><th>" + (grafModoDespesa === "categoria" ? "Categoria" : "Centro de Custo") + "</th>" + linhas.map((l) => `<th style="text-align:center">${l.nome}</th>`).join("") + "</tr>" +
+        "<tr><th>Gasto</th>" + linhas.map((l) => {
+          let cls = "";
+          if (l.nome === nomeMaior) cls = "celula-maior";
+          else if (l.nome === nomeMenor) cls = "celula-menor";
+          return `<td class="${cls}">${formatarMoeda(l.valor)}</td>`;
+        }).join("") + "</tr>";
+    }
+
+    function grafRenderMapa() {
+      const p = grafPeriodos.mapa;
+      const dados = obterOrcamentos().filter((o) => grafDentroDoPeriodo(o.criadoEm, p));
+      const porUF = {};
+      dados.forEach((o) => {
+        const uf = String((grafPontoMapa === "origem" ? o.origemUF : o.destinoUF) || "").trim().toUpperCase();
+        if (GRAF_GRADE_UF[uf]) porUF[uf] = (porUF[uf] || 0) + 1;
+      });
+
+      const valores = Object.values(porUF);
+      const max = Math.max(...valores, 1);
+      const ordenado = Object.entries(porUF).sort((a, b) => b[1] - a[1]);
+      const ufMax = ordenado.length > 0 ? ordenado[0][0] : null;
+
+      document.getElementById("graf-mapa-br").innerHTML = Object.entries(GRAF_GRADE_UF)
+        .map(([uf, pos]) => {
+          const v = porUF[uf] || 0;
+          const pct = v > 0 ? Math.round(15 + (v / max) * 80) : 0;
+          const classes = ["graf-uf"];
+          if (v > 0) classes.push("tem-dado");
+          if (pct > 55) classes.push("forte");
+          if (uf === ufMax) classes.push("max");
+          const fundo = v > 0 ? `background: color-mix(in srgb, var(--brand) ${pct}%, var(--panel));` : "";
+          return `
+          <div class="${classes.join(" ")}" style="grid-row:${pos[0]};grid-column:${pos[1]};${fundo}" title="${uf}: ${v} orçamento(s)">
+            ${uf}
+            ${v > 0 ? `<span class="qtd">${v}</span>` : ""}
+          </div>`;
+        })
+        .join("");
+
+      document.getElementById("graf-mapa-legenda").innerHTML = `
+        <div class="faixa"><span class="amostra" style="background: color-mix(in srgb, var(--brand) 95%, var(--panel));"></span> Mais orçamentos</div>
+        <div class="faixa"><span class="amostra" style="background: color-mix(in srgb, var(--brand) 40%, var(--panel));"></span> Volume médio</div>
+        <div class="faixa"><span class="amostra" style="background: color-mix(in srgb, var(--brand) 15%, var(--panel));"></span> Poucos</div>
+        <div class="faixa"><span class="amostra" style="background: var(--graf-grid);"></span> Sem orçamentos</div>
+        ${ufMax ? `<div class="faixa"><span class="amostra" style="background: color-mix(in srgb, var(--brand) 95%, var(--panel)); outline: 2px solid var(--graf-maior); outline-offset: 1px;"></span> Maior volume (${ufMax})</div>` : ""}
+      `;
+
+      if (ordenado.length === 0) {
+        document.getElementById("graf-tabela-mapa").innerHTML =
+          "<tr><th>Estado</th><td>Nenhum orçamento com UF preenchida no período. Os orçamentos importados da planilha não tinham UF; os novos cadastros vão preencher o mapa.</td></tr>";
+        return;
+      }
+
+      document.getElementById("graf-tabela-mapa").innerHTML =
+        "<tr><th>Estado</th>" + ordenado.map(([uf]) => `<th style="text-align:center">${uf}</th>`).join("") + "</tr>" +
+        "<tr><th>Orçamentos</th>" + ordenado.map(([, v], i) => {
+          let cls = "";
+          if (i === 0) cls = "celula-maior";
+          else if (i === ordenado.length - 1 && ordenado.length > 1) cls = "celula-menor";
+          return `<td class="${cls}">${v}</td>`;
+        }).join("") + "</tr>";
+    }
+
+    function grafRenderTudo() {
+      grafRenderMes();
+      grafRenderFunil();
+      grafRenderConversao();
+      grafRenderResp();
+      grafRenderDespesas();
+      grafRenderMapa();
+    }
+
+    function grafPopularSelectStatus() {
+      const select = document.getElementById("graf-sel-status");
+      const statusPadrao = ["Aguardando Retorno", "Aprovado", "Cancelado", "Contratado", "Em Elaboracao", "Em Negociacao", "Enviado", "Reprovado", "Solicitado"];
+      const doLookup = (opcoesLookupCache.status_orcamento || []).map((o) => o.codigo);
+      const lista = doLookup.length > 0 ? doLookup : statusPadrao;
+      select.innerHTML = '<option value="__todos__">Todos os status</option>' +
+        lista.map((s) => `<option value="${s}" ${s === grafStatusResp ? "selected" : ""}>${s}</option>`).join("");
+    }
+
+    function grafGerarPdf(cardId) {
+      const alvos = cardId
+        ? [document.getElementById(cardId)]
+        : Array.from(painelGraficos.querySelectorAll(".graf-card"));
+      document.body.classList.add("imprimindo-grafico");
+      alvos.forEach((c) => c && c.classList.add("pdf-alvo"));
+
+      const limpar = () => {
+        document.body.classList.remove("imprimindo-grafico");
+        painelGraficos.querySelectorAll(".pdf-alvo").forEach((c) => c.classList.remove("pdf-alvo"));
+        window.removeEventListener("afterprint", limpar);
+      };
+      window.addEventListener("afterprint", limpar);
+      window.print();
+      setTimeout(limpar, 500);
+    }
+
+    function abrirAbaGraficos() {
+      if (!grafInicializado) {
+        grafAnos = grafCalcularAnos();
+        const anoAtual = String(new Date().getFullYear());
+        const anoInicial = grafAnos.includes(anoAtual) ? anoAtual : grafAnos[grafAnos.length - 1];
+        grafPeriodoGlobal.ano = anoInicial;
+        Object.keys(grafPeriodos).forEach((k) => { grafPeriodos[k].ano = anoInicial; });
+
+        grafMontarControle("graf-controle-global", null, () => {}, true);
+        grafMontarControle("graf-controle-mes", "mes", grafRenderMes, false);
+        grafMontarControle("graf-controle-funil", "funil", grafRenderFunil, false);
+        grafMontarControle("graf-controle-conversao", "conversao", grafRenderConversao, false);
+        grafMontarControle("graf-controle-resp", "resp", grafRenderResp, false);
+        grafMontarControle("graf-controle-despesas", "despesas", grafRenderDespesas, false);
+        grafMontarControle("graf-controle-mapa", "mapa", grafRenderMapa, false);
+        grafPopularSelectStatus();
+
+        document.getElementById("graf-sel-status").addEventListener("change", (event) => {
+          grafStatusResp = event.target.value;
+          grafRenderResp();
+        });
+
+        document.getElementById("graf-seg-despesa").addEventListener("click", (event) => {
+          const botao = event.target instanceof Element ? event.target.closest("button") : null;
+          if (!botao) return;
+          grafModoDespesa = botao.dataset.modo;
+          document.querySelectorAll("#graf-seg-despesa button").forEach((b) => b.classList.toggle("on", b === botao));
+          grafRenderDespesas();
+        });
+
+        document.getElementById("graf-seg-mapa").addEventListener("click", (event) => {
+          const botao = event.target instanceof Element ? event.target.closest("button") : null;
+          if (!botao) return;
+          grafPontoMapa = botao.dataset.ponto;
+          document.querySelectorAll("#graf-seg-mapa button").forEach((b) => b.classList.toggle("on", b === botao));
+          grafRenderMapa();
+        });
+
+        painelGraficos.addEventListener("click", (event) => {
+          const botao = event.target instanceof Element ? event.target.closest("[data-pdf-alvo]") : null;
+          if (!botao) return;
+          const alvo = botao.getAttribute("data-pdf-alvo");
+          grafGerarPdf(alvo === "__todos__" ? null : alvo);
+        });
+
+        grafInicializado = true;
+      }
+
+      grafRenderTudo();
+    }
 
     async function initApp() {
       criarCampoOcultoEdicao();

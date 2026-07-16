@@ -76,6 +76,7 @@
       <button class="tab-btn active" type="button" id="tab-orcamentos" aria-selected="true">Orçamentos</button>
       <button class="tab-btn" type="button" id="tab-cadastro" aria-selected="false">Cadastro</button>
       <button class="tab-btn" type="button" id="tab-financeiro" aria-selected="false">Financeiro</button>
+      <button class="tab-btn" type="button" id="tab-graficos" aria-selected="false">Gráficos</button>
     </nav>
 
     <div class="tab-panel active" id="painel-orcamentos">
@@ -1220,6 +1221,150 @@
           </div>
         </section>
       </div>
+    </div>
+
+    <div class="tab-panel" id="painel-graficos">
+      <section class="card graf-card-global">
+        <div class="graf-card-head">
+          <h2>Período geral</h2>
+        </div>
+        <p class="graf-sub">Escolha o ano e o mês e aplique em todos os gráficos. Depois disso, cada gráfico ainda pode ter o período ajustado individualmente.</p>
+        <div class="graf-controles" id="graf-controle-global"></div>
+      </section>
+
+      <section class="card graf-card" id="graf-card-mes">
+        <div class="graf-card-head">
+          <h2>Orçamentos por mês</h2>
+          <button class="btn-pdf" type="button" data-pdf-alvo="graf-card-mes">Gerar PDF</button>
+        </div>
+        <p class="graf-sub">Quantidade de orçamentos registrados no período escolhido.</p>
+        <div class="graf-controles" id="graf-controle-mes"></div>
+        <div class="graf-tiles" id="graf-tiles-mes"></div>
+        <div>
+          <div class="graf-colunas" id="graf-grafico-mes"></div>
+          <div class="graf-rotulos" id="graf-rotulos-mes"></div>
+        </div>
+        <div class="graf-legenda">
+          <span class="chip"><span class="quadrado q-maior"></span> Maior do período</span>
+          <span class="chip"><span class="quadrado q-menor"></span> Menor do período</span>
+          <span class="chip"><span class="quadrado q-normal"></span> Demais</span>
+        </div>
+        <details>
+          <summary>Ver dados em tabela</summary>
+          <div class="graf-table-scroll"><table class="graf-tabela" id="graf-tabela-mes"></table></div>
+        </details>
+      </section>
+
+      <section class="card graf-card" id="graf-card-funil">
+        <div class="graf-card-head">
+          <h2>Funil de status</h2>
+          <button class="btn-pdf" type="button" data-pdf-alvo="graf-card-funil">Gerar PDF</button>
+        </div>
+        <p class="graf-sub">Quantos orçamentos do período estão em cada situação.</p>
+        <div class="graf-controles" id="graf-controle-funil"></div>
+        <div class="graf-tiles" id="graf-tiles-funil"></div>
+        <div class="graf-linhas" id="graf-grafico-funil"></div>
+        <details>
+          <summary>Ver dados em tabela</summary>
+          <div class="graf-table-scroll"><table class="graf-tabela" id="graf-tabela-funil"></table></div>
+        </details>
+      </section>
+
+      <section class="card graf-card" id="graf-card-conversao">
+        <div class="graf-card-head">
+          <h2>Taxa de conversão por responsável</h2>
+          <button class="btn-pdf" type="button" data-pdf-alvo="graf-card-conversao">Gerar PDF</button>
+        </div>
+        <p class="graf-sub">Percentual de orçamentos aprovados/contratados sobre o total de cada responsável no período. O volume aparece ao lado para dar contexto.</p>
+        <div class="graf-controles" id="graf-controle-conversao"></div>
+        <div class="graf-tiles" id="graf-tiles-conversao"></div>
+        <div class="graf-linhas graf-linhas-largas" id="graf-grafico-conversao"></div>
+        <div class="graf-legenda">
+          <span class="chip"><span class="quadrado q-maior"></span> Maior taxa</span>
+          <span class="chip"><span class="quadrado q-menor"></span> Menor taxa</span>
+          <span class="chip"><span class="quadrado q-normal"></span> Demais</span>
+        </div>
+        <details>
+          <summary>Ver dados em tabela</summary>
+          <div class="graf-table-scroll"><table class="graf-tabela" id="graf-tabela-conversao"></table></div>
+        </details>
+      </section>
+
+      <section class="card graf-card" id="graf-card-resp">
+        <div class="graf-card-head">
+          <h2>Orçamentos por responsável</h2>
+          <button class="btn-pdf" type="button" data-pdf-alvo="graf-card-resp">Gerar PDF</button>
+        </div>
+        <p class="graf-sub">Total de orçamentos de cada responsável no período, filtrado pelo status escolhido.</p>
+        <div class="graf-controles" id="graf-controle-resp"></div>
+        <div class="graf-controles">
+          <label for="graf-sel-status">Status do orçamento:</label>
+          <select id="graf-sel-status">
+            <option value="__todos__">Todos os status</option>
+          </select>
+        </div>
+        <div class="graf-tiles" id="graf-tiles-resp"></div>
+        <div class="graf-linhas" id="graf-grafico-resp"></div>
+        <div class="graf-legenda">
+          <span class="chip"><span class="quadrado q-maior"></span> Maior volume</span>
+          <span class="chip"><span class="quadrado q-menor"></span> Menor volume</span>
+          <span class="chip"><span class="quadrado q-normal"></span> Demais</span>
+        </div>
+        <details>
+          <summary>Ver dados em tabela</summary>
+          <div class="graf-table-scroll"><table class="graf-tabela" id="graf-tabela-resp"></table></div>
+        </details>
+      </section>
+
+      <section class="card graf-card" id="graf-card-despesas">
+        <div class="graf-card-head">
+          <h2>Despesas por categoria e centro de custo</h2>
+          <button class="btn-pdf" type="button" data-pdf-alvo="graf-card-despesas">Gerar PDF</button>
+        </div>
+        <p class="graf-sub">Gastos lançados no módulo Financeiro dentro do período, agrupados por categoria ou centro de custo.</p>
+        <div class="graf-controles" id="graf-controle-despesas"></div>
+        <div class="graf-controles">
+          <label>Agrupar por:</label>
+          <div class="graf-seg" id="graf-seg-despesa">
+            <button type="button" data-modo="categoria" class="on">Categoria</button>
+            <button type="button" data-modo="centro">Centro de Custo</button>
+          </div>
+        </div>
+        <div class="graf-linhas" id="graf-grafico-despesas"></div>
+        <div class="graf-legenda">
+          <span class="chip"><span class="quadrado q-maior"></span> Maior gasto</span>
+          <span class="chip"><span class="quadrado q-menor"></span> Menor gasto</span>
+          <span class="chip"><span class="quadrado q-normal"></span> Demais</span>
+        </div>
+        <details>
+          <summary>Ver dados em tabela</summary>
+          <div class="graf-table-scroll"><table class="graf-tabela" id="graf-tabela-despesas"></table></div>
+        </details>
+      </section>
+
+      <section class="card graf-card" id="graf-card-mapa">
+        <div class="graf-card-head">
+          <h2>Orçamentos por estado</h2>
+          <button class="btn-pdf" type="button" data-pdf-alvo="graf-card-mapa">Gerar PDF</button>
+        </div>
+        <p class="graf-sub">Mapa do Brasil em grade: quanto mais escuro o azul, mais orçamentos no estado. Usa a UF de origem ou destino dos orçamentos do período. O estado com maior volume ganha contorno verde.</p>
+        <div class="graf-controles" id="graf-controle-mapa"></div>
+        <div class="graf-controles">
+          <label>Ponto da rota:</label>
+          <div class="graf-seg" id="graf-seg-mapa">
+            <button type="button" data-ponto="origem" class="on">Origem</button>
+            <button type="button" data-ponto="destino">Destino</button>
+          </div>
+        </div>
+        <div class="graf-mapa-wrap">
+          <div class="graf-mapa" id="graf-mapa-br"></div>
+          <div class="graf-mapa-legenda" id="graf-mapa-legenda"></div>
+        </div>
+        <details>
+          <summary>Ver dados em tabela</summary>
+          <div class="graf-table-scroll"><table class="graf-tabela" id="graf-tabela-mapa"></table></div>
+        </details>
+      </section>
     </div>
   </main>
 

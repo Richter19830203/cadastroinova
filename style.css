@@ -674,6 +674,497 @@
       font-size: 0.8rem;
     }
 
+    /* ===== Aba Graficos ===== */
+    :root {
+      --graf-maior: #1f8f45;
+      --graf-menor: #bc2f1b;
+      --graf-maior-wm: rgba(31, 143, 69, 0.14);
+      --graf-menor-wm: rgba(188, 47, 27, 0.12);
+      --graf-grid: #e3eef7;
+    }
+
+    .graf-card-global {
+      border: 2px solid var(--brand);
+    }
+
+    .graf-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .graf-card-head h2 {
+      margin: 0 0 4px;
+    }
+
+    .graf-sub {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .btn-pdf {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 12px;
+      background: var(--panel);
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 120ms ease, color 120ms ease;
+    }
+
+    .btn-pdf:hover {
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+
+    .graf-controles {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .graf-controles label {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .graf-seg {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .graf-seg button {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .graf-seg button + button {
+      border-left: 1px solid var(--line);
+    }
+
+    .graf-seg button.on {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .graf-controles select {
+      width: auto;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .btn-aplicar-global {
+      background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+      color: #fff;
+      font-size: 0.86rem;
+      padding: 9px 16px;
+    }
+
+    .graf-tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .graf-tile {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .graf-tile small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .graf-tile strong {
+      font-size: 1.25rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .graf-tile .mini {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .graf-colunas {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 240px;
+      padding: 8px 4px 0;
+      border-bottom: 2px solid var(--line);
+      background: repeating-linear-gradient(to top, transparent 0 59px, var(--graf-grid) 59px 60px);
+    }
+
+    .graf-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      height: 100%;
+      cursor: default;
+    }
+
+    .graf-col .barra {
+      width: 100%;
+      max-width: 44px;
+      background: var(--brand);
+      border-radius: 4px 4px 0 0;
+      transition: background 120ms ease;
+      min-height: 2px;
+    }
+
+    .graf-col:hover .barra {
+      background: var(--brand-strong);
+    }
+
+    .graf-col .valor {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 4px;
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+
+    .graf-col:hover .valor,
+    .graf-col.destaque .valor {
+      opacity: 1;
+    }
+
+    .graf-col.maior .barra { background: var(--graf-maior); }
+    .graf-col.maior .valor { color: var(--graf-maior); }
+    .graf-col.menor .barra { background: var(--graf-menor); }
+    .graf-col.menor .valor { color: var(--graf-menor); }
+
+    .graf-rotulos {
+      display: flex;
+      gap: 6px;
+      padding: 6px 4px 0;
+    }
+
+    .graf-rotulos span {
+      flex: 1;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .graf-linhas {
+      display: grid;
+      gap: 8px;
+    }
+
+    .graf-linha {
+      display: grid;
+      grid-template-columns: 130px 1fr 110px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .graf-linhas-largas .graf-linha {
+      grid-template-columns: 130px 1fr 190px;
+    }
+
+    .graf-linha .nome {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .graf-linha .trilho {
+      height: 22px;
+      border-radius: 4px;
+      background: var(--graf-grid);
+      overflow: hidden;
+    }
+
+    .graf-linha .preenchido {
+      height: 100%;
+      background: var(--brand);
+      border-radius: 4px;
+      transition: width 300ms ease, background 120ms ease;
+      min-width: 2px;
+    }
+
+    .graf-linha:hover .preenchido {
+      background: var(--brand-strong);
+    }
+
+    .graf-linha .num {
+      font-size: 0.84rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .graf-linha.maior .preenchido { background: var(--graf-maior); }
+    .graf-linha.maior .num { color: var(--graf-maior); }
+    .graf-linha.menor .preenchido { background: var(--graf-menor); }
+    .graf-linha.menor .num { color: var(--graf-menor); }
+
+    .graf-linha .marcador {
+      font-size: 0.66rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 6px;
+    }
+
+    .graf-linha.maior .marcador { color: var(--graf-maior); }
+    .graf-linha.menor .marcador { color: var(--graf-menor); }
+
+    .graf-legenda {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .graf-legenda .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .graf-legenda .quadrado {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .q-normal { background: var(--brand); }
+    .q-maior { background: var(--graf-maior); }
+    .q-menor { background: var(--graf-menor); }
+
+    .graf-vazio {
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 18px 0;
+      margin: 0;
+    }
+
+    .graf-card details {
+      margin-top: 14px;
+    }
+
+    .graf-card summary {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .graf-table-scroll {
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+
+    .graf-tabela {
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      white-space: nowrap;
+      min-width: 0;
+      width: auto;
+    }
+
+    .graf-tabela th,
+    .graf-tabela td {
+      border: 1px solid var(--line);
+      padding: 5px 10px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      text-transform: none;
+      letter-spacing: normal;
+      background: transparent;
+      font-size: 0.84rem;
+    }
+
+    .graf-tabela th {
+      background: var(--graf-grid);
+      text-align: left;
+      color: var(--ink);
+    }
+
+    .graf-tabela td.celula-maior {
+      background: var(--graf-maior-wm);
+      font-weight: 800;
+    }
+
+    .graf-tabela td.celula-menor {
+      background: var(--graf-menor-wm);
+      font-weight: 800;
+    }
+
+    .graf-mapa-wrap {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .graf-mapa {
+      display: grid;
+      grid-template-columns: repeat(7, 46px);
+      grid-auto-rows: 46px;
+      gap: 4px;
+    }
+
+    .graf-uf {
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      background: var(--graf-grid);
+      color: var(--muted);
+      cursor: default;
+      transition: transform 120ms ease;
+    }
+
+    .graf-uf:hover {
+      transform: scale(1.08);
+    }
+
+    .graf-uf .qtd {
+      font-size: 0.64rem;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    .graf-uf.tem-dado { color: var(--ink); }
+    .graf-uf.forte { color: #fff; }
+
+    .graf-uf.max {
+      outline: 2px solid var(--graf-maior);
+      outline-offset: 2px;
+    }
+
+    .graf-mapa-legenda {
+      display: grid;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .graf-mapa-legenda .faixa {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .graf-mapa-legenda .amostra {
+      width: 18px;
+      height: 14px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    /* Botoes de acao com icones na tabela de orcamentos */
+    .acoes-icones {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    .btn-icone {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+
+    .btn-icone svg {
+      width: 17px;
+      height: 17px;
+      stroke: var(--muted);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 120ms ease;
+      pointer-events: none;
+    }
+
+    .btn-icone:hover {
+      border-color: var(--brand);
+      background: rgba(47, 138, 203, 0.08);
+    }
+
+    .btn-icone:hover svg {
+      stroke: var(--brand);
+    }
+
+    .btn-icone.excluir:hover {
+      border-color: var(--graf-menor);
+      background: var(--graf-menor-wm);
+    }
+
+    .btn-icone.excluir:hover svg {
+      stroke: var(--graf-menor);
+    }
+
+    .table-actions .btn-icone {
+      padding: 0;
+      font-size: 0;
+    }
+
+    @media (max-width: 900px) {
+      .graf-rotulos span { font-size: 0.56rem; }
+      .graf-linha { grid-template-columns: 96px 1fr 90px; }
+      .graf-linhas-largas .graf-linha { grid-template-columns: 96px 1fr 150px; }
+      .graf-mapa { grid-template-columns: repeat(7, 38px); grid-auto-rows: 38px; }
+      .graf-uf { font-size: 0.62rem; }
+      .graf-uf .qtd { font-size: 0.56rem; }
+    }
+
     @media print {
       body {
         background: #fff;
@@ -696,6 +1187,7 @@
       #painel-clientes,
       #painel-cadastro,
       #painel-financeiro,
+      #painel-graficos,
       #titulo-formulario,
       #orcamento-form,
       #mensagem,
@@ -722,6 +1214,47 @@
       #painel-orcamentos > .card:not(.proposal-wrap),
       #titulo-proposta-preview {
         display: none !important;
+      }
+
+      /* Modo de impressao dos graficos (PDF) */
+      body.imprimindo-grafico #painel-orcamentos,
+      body.imprimindo-grafico .proposal-wrap,
+      body.imprimindo-grafico .proposal-wrap.active {
+        display: none !important;
+      }
+
+      body.imprimindo-grafico #painel-graficos {
+        display: block !important;
+      }
+
+      body.imprimindo-grafico #painel-graficos .card {
+        display: none !important;
+      }
+
+      body.imprimindo-grafico #painel-graficos .card.pdf-alvo {
+        display: block !important;
+        box-shadow: none;
+        border: 1px solid #cdd7e2;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 14px;
+      }
+
+      body.imprimindo-grafico .btn-pdf,
+      body.imprimindo-grafico .btn-aplicar-global,
+      body.imprimindo-grafico .graf-card-global.pdf-alvo .graf-controles button,
+      body.imprimindo-grafico .graf-card summary {
+        display: none !important;
+      }
+
+      body.imprimindo-grafico .graf-card details,
+      body.imprimindo-grafico .graf-card details .graf-table-scroll {
+        display: block !important;
+        overflow: visible;
+      }
+
+      body.imprimindo-grafico .graf-col .valor {
+        opacity: 1 !important;
       }
 
       .proposal-sheet {
