@@ -1448,19 +1448,11 @@ app.post("/api/orcamentos/numero/reservar", async (req, res) => {
     );
 
     const disponivelResult = await client.query(`
-      SELECT MIN(n) AS numero
-      FROM generate_series(1, (
-        SELECT COALESCE(MAX(numero), 0) + 1 FROM (
-          SELECT numero FROM orcamentos WHERE numero IS NOT NULL
-          UNION
-          SELECT numero FROM orcamento_reservas_numero
-        ) usados
-      )) AS n
-      WHERE n NOT IN (
+      SELECT COALESCE(MAX(numero), 0) + 1 AS numero FROM (
         SELECT numero FROM orcamentos WHERE numero IS NOT NULL
         UNION
         SELECT numero FROM orcamento_reservas_numero
-      );
+      ) usados;
     `);
 
     const numero = Number(disponivelResult.rows[0] && disponivelResult.rows[0].numero) || 1;
