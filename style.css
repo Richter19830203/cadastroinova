@@ -99,7 +99,7 @@
     .hero,
     .card {
       background: var(--panel);
-      border: 1px solid rgba(31, 111, 168, 0.14);
+      border: 2px solid var(--brand);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
@@ -729,10 +729,6 @@
       --graf-maior-wm: rgba(31, 143, 69, 0.14);
       --graf-menor-wm: rgba(188, 47, 27, 0.12);
       --graf-grid: #e3eef7;
-    }
-
-    .graf-card-global {
-      border: 2px solid var(--brand);
     }
 
     .graf-card-head {
