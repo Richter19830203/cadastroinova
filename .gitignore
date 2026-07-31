@@ -9,6 +9,9 @@ inova transportadora dados.txt
 cadastro.xlsx
 ~$*.xlsx
 ~$*.doc*
+dados txt/
+apresentação/
+*.pptx
 
 # Configuracao local do Claude Code
 .claude

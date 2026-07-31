@@ -1521,6 +1521,46 @@ app.get("/api/orcamentos", async (_req, res) => {
   }
 });
 
+const ORCAMENTOS_BULK_COLUNAS = [
+  "codigo", "numero", "criado_em", "atualizado_em", "cliente", "a_c", "contato", "origem", "origem_uf",
+  "destino", "destino_uf", "itens_produto", "quantidade", "descricao", "tipo_veiculo", "tipo_servico_id",
+  "tipo_servico_descricao", "tipo_carga", "peso", "volume", "prazo", "valor", "validade",
+  "status_orcamento", "status_entrega", "responsavel", "observacoes"
+];
+const ORCAMENTOS_BULK_LOTE = 200;
+
+function orcamentoParaValores(item) {
+  return [
+    item.codigo,
+    item.numero != null && item.numero !== "" ? Number(item.numero) : null,
+    item.criadoEm || new Date().toISOString(),
+    item.atualizadoEm || null,
+    item.cliente,
+    item.aC || null,
+    item.contato || null,
+    item.origem,
+    item.origemUF || null,
+    item.destino,
+    item.destinoUF || null,
+    Array.isArray(item.itensProduto) && item.itensProduto.length > 0 ? JSON.stringify(item.itensProduto) : null,
+    item.quantidade !== "" && item.quantidade != null ? Number(item.quantidade) : null,
+    item.descricao || null,
+    item.tipoVeiculo || null,
+    item.tipoServicoId != null ? Number(item.tipoServicoId) : null,
+    item.tipoServicoDescricao || null,
+    item.tipoCarga || null,
+    item.peso !== "" && item.peso != null ? Number(item.peso) : null,
+    item.volume !== "" && item.volume != null ? Number(item.volume) : null,
+    item.prazo !== "" && item.prazo != null ? Number(item.prazo) : null,
+    Number(item.valor),
+    item.validade || null,
+    item.statusOrcamento,
+    item.statusEntrega,
+    item.responsavel || null,
+    item.observacoes || null
+  ];
+}
+
 app.put("/api/orcamentos/bulk", async (req, res) => {
   const items = ensureArray(req.body && req.body.items);
   const client = await pool.connect();
@@ -1529,44 +1569,24 @@ app.put("/api/orcamentos/bulk", async (req, res) => {
     await client.query("BEGIN");
     await client.query("DELETE FROM orcamentos");
 
-    for (const item of items) {
+    const colunaItensProdutoIdx = ORCAMENTOS_BULK_COLUNAS.indexOf("itens_produto");
+
+    for (let inicio = 0; inicio < items.length; inicio += ORCAMENTOS_BULK_LOTE) {
+      const lote = items.slice(inicio, inicio + ORCAMENTOS_BULK_LOTE);
+      const valores = [];
+      const linhas = lote.map((item, idx) => {
+        const base = idx * ORCAMENTOS_BULK_COLUNAS.length;
+        valores.push(...orcamentoParaValores(item));
+        const placeholders = ORCAMENTOS_BULK_COLUNAS.map((_, colIdx) => {
+          const posicao = base + colIdx + 1;
+          return colIdx === colunaItensProdutoIdx ? `$${posicao}::jsonb` : `$${posicao}`;
+        });
+        return `(${placeholders.join(",")})`;
+      });
+
       await client.query(
-        `
-        INSERT INTO orcamentos (
-          codigo, numero, criado_em, atualizado_em, cliente, a_c, contato, origem, origem_uf, destino, destino_uf,
-          itens_produto, quantidade, descricao, tipo_veiculo, tipo_servico_id, tipo_servico_descricao,
-          tipo_carga, peso, volume, prazo, valor, validade, status_orcamento, status_entrega, responsavel, observacoes
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
-        `,
-        [
-          item.codigo,
-          item.numero != null && item.numero !== "" ? Number(item.numero) : null,
-          item.criadoEm || new Date().toISOString(),
-          item.atualizadoEm || null,
-          item.cliente,
-          item.aC || null,
-          item.contato || null,
-          item.origem,
-          item.origemUF || null,
-          item.destino,
-          item.destinoUF || null,
-          Array.isArray(item.itensProduto) && item.itensProduto.length > 0 ? JSON.stringify(item.itensProduto) : null,
-          item.quantidade !== "" && item.quantidade != null ? Number(item.quantidade) : null,
-          item.descricao || null,
-          item.tipoVeiculo || null,
-          item.tipoServicoId != null ? Number(item.tipoServicoId) : null,
-          item.tipoServicoDescricao || null,
-          item.tipoCarga || null,
-          item.peso !== "" && item.peso != null ? Number(item.peso) : null,
-          item.volume !== "" && item.volume != null ? Number(item.volume) : null,
-          item.prazo !== "" && item.prazo != null ? Number(item.prazo) : null,
-          Number(item.valor),
-          item.validade || null,
-          item.statusOrcamento,
-          item.statusEntrega,
-          item.responsavel || null,
-          item.observacoes || null
-        ]
+        `INSERT INTO orcamentos (${ORCAMENTOS_BULK_COLUNAS.join(",")}) VALUES ${linhas.join(",")}`,
+        valores
       );
     }
 
