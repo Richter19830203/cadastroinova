@@ -63,11 +63,21 @@
         </div>
         <div class="metric">
           <small>Valor total cotado</small>
-          <strong id="valor-total">R$ 0,00</strong>
+          <div class="metric-sigilo">
+            <strong id="valor-total">••••••</strong>
+            <button type="button" class="btn-revelar" id="revelar-valor-total" hidden aria-label="Mostrar valor total cotado" title="Mostrar valor">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
         <div class="metric">
           <small>Ticket médio</small>
-          <strong id="ticket-medio">R$ 0,00</strong>
+          <div class="metric-sigilo">
+            <strong id="ticket-medio">••••••</strong>
+            <button type="button" class="btn-revelar" id="revelar-ticket-medio" hidden aria-label="Mostrar ticket médio" title="Mostrar valor">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     </section>

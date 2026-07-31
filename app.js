@@ -65,6 +65,8 @@
     const totalEl = document.getElementById("total-orcamentos");
     const totalValorEl = document.getElementById("valor-total");
     const ticketMedioEl = document.getElementById("ticket-medio");
+    const revelarValorTotalBtn = document.getElementById("revelar-valor-total");
+    const revelarTicketMedioBtn = document.getElementById("revelar-ticket-medio");
     const clearButton = document.getElementById("limpar-formulario");
     const exportButton = document.getElementById("exportar-json");
     const listaClientesOrcamento = document.getElementById("lista-clientes-orcamento");
@@ -2279,15 +2281,66 @@
       atualizarSelectsFinanceiro();
     }
 
+    const RESPONSAVEIS_RESUMO_FINANCEIRO = ["INOVA", "ALLANA"];
+    const MASCARA_VALOR = "••••••";
+    let resumoFinanceiroCache = null;
+    let resumoFinanceiroRevelado = false;
+
+    function podeVerResumoFinanceiro() {
+      const nome = String(usuarioLogado || "").trim().toUpperCase();
+      return RESPONSAVEIS_RESUMO_FINANCEIRO.includes(nome);
+    }
+
     function atualizarMetricas(orcamentos) {
       const total = orcamentos.length;
-      const soma = orcamentos.reduce((acc, item) => acc + Number(item.valor || 0), 0);
-      const media = total > 0 ? soma / total : 0;
-
       totalEl.textContent = String(total);
-      totalValorEl.textContent = formatarMoeda(soma);
-      ticketMedioEl.textContent = formatarMoeda(media);
+
+      if (podeVerResumoFinanceiro()) {
+        revelarValorTotalBtn.hidden = false;
+        revelarTicketMedioBtn.hidden = false;
+      } else {
+        revelarValorTotalBtn.hidden = true;
+        revelarTicketMedioBtn.hidden = true;
+        resumoFinanceiroCache = null;
+        resumoFinanceiroRevelado = false;
+      }
+
+      if (!resumoFinanceiroRevelado) {
+        totalValorEl.textContent = MASCARA_VALOR;
+        ticketMedioEl.textContent = MASCARA_VALOR;
+      }
     }
+
+    async function alternarResumoFinanceiro() {
+      if (!podeVerResumoFinanceiro()) {
+        return;
+      }
+
+      if (resumoFinanceiroRevelado) {
+        resumoFinanceiroRevelado = false;
+        totalValorEl.textContent = MASCARA_VALOR;
+        ticketMedioEl.textContent = MASCARA_VALOR;
+        revelarValorTotalBtn.classList.remove("revelado");
+        revelarTicketMedioBtn.classList.remove("revelado");
+        return;
+      }
+
+      try {
+        if (!resumoFinanceiroCache) {
+          resumoFinanceiroCache = await apiRequest("/orcamentos/resumo-financeiro");
+        }
+        totalValorEl.textContent = formatarMoeda(resumoFinanceiroCache.valorTotal);
+        ticketMedioEl.textContent = formatarMoeda(resumoFinanceiroCache.ticketMedio);
+        resumoFinanceiroRevelado = true;
+        revelarValorTotalBtn.classList.add("revelado");
+        revelarTicketMedioBtn.classList.add("revelado");
+      } catch (_error) {
+        mostrarMensagem("Nao foi possivel carregar o resumo financeiro.", "error");
+      }
+    }
+
+    revelarValorTotalBtn.addEventListener("click", alternarResumoFinanceiro);
+    revelarTicketMedioBtn.addEventListener("click", alternarResumoFinanceiro);
 
     function preencherFormulario(item) {
       const itensProduto = normalizarItensProduto(item);

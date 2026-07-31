@@ -157,6 +157,54 @@
       font-family: "IBM Plex Mono", monospace;
     }
 
+    .metric-sigilo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metric-sigilo strong {
+      letter-spacing: 0.05em;
+    }
+
+    .btn-revelar {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+
+    .btn-revelar svg {
+      width: 15px;
+      height: 15px;
+      stroke: var(--muted);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .btn-revelar:hover {
+      border-color: var(--brand);
+      background: rgba(47, 138, 203, 0.08);
+    }
+
+    .btn-revelar:hover svg {
+      stroke: var(--brand);
+    }
+
+    .btn-revelar.revelado svg {
+      stroke: var(--brand-strong);
+    }
+
     .card {
       padding: 18px;
     }

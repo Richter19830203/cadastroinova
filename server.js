@@ -1433,6 +1433,27 @@ app.get("/api/opcoes", async (_req, res) => {
   }
 });
 
+const RESPONSAVEIS_RESUMO_FINANCEIRO = ["INOVA", "ALLANA"];
+
+app.get("/api/orcamentos/resumo-financeiro", async (req, res) => {
+  const usuario = normalizeUserName(req.auth && req.auth.username);
+  if (!RESPONSAVEIS_RESUMO_FINANCEIRO.includes(usuario)) {
+    return res.status(403).json({ error: "Sem permissao para ver o resumo financeiro" });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT COALESCE(SUM(valor), 0) AS "valorTotal", COALESCE(AVG(valor), 0) AS "ticketMedio" FROM orcamentos`
+    );
+    res.json({
+      valorTotal: Number(result.rows[0].valorTotal),
+      ticketMedio: Number(result.rows[0].ticketMedio)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const RESERVA_NUMERO_ORCAMENTO_TTL_MINUTOS = 30;
 const RESERVA_NUMERO_ORCAMENTO_LOCK_KEY = 742001;
 
