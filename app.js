@@ -1036,6 +1036,17 @@
       }
     }
 
+    function algumFiltroAtivo() {
+      return Boolean(
+        filtrosAtivos.numeroOrcamento ||
+        filtrosAtivos.cliente ||
+        filtrosAtivos.statusOrcamento ||
+        filtrosAtivos.statusEntrega ||
+        filtrosAtivos.dataInicio ||
+        filtrosAtivos.dataFim
+      );
+    }
+
     function filtrarOrcamentos(orcamentos) {
       return orcamentos.filter((orcamento) => {
         // Filtro numero/codigo do orcamento
@@ -2257,8 +2268,16 @@
 
     function renderizarTabela() {
       const orcamentos = obterOrcamentos();
-      const orcamentosFiltrados = filtrarOrcamentos(orcamentos);
       tbody.innerHTML = "";
+
+      if (!algumFiltroAtivo()) {
+        tbody.innerHTML = "<tr><td colspan='10'>Use os filtros acima para buscar um orçamento.</td></tr>";
+        atualizarMetricas(orcamentos);
+        atualizarSelectsFinanceiro();
+        return;
+      }
+
+      const orcamentosFiltrados = filtrarOrcamentos(orcamentos);
 
       if (orcamentosFiltrados.length === 0) {
         tbody.innerHTML = "<tr><td colspan='10'>Nenhum orcamento encontrado com os filtros aplicados.</td></tr>";
@@ -3378,7 +3397,7 @@
       filtrosAtivos.dataInicio = filtroDataInicio.value ? obterDataISO(filtroDataInicio.value) : null;
       filtrosAtivos.dataFim = filtroDataFim.value ? obterDataISO(filtroDataFim.value) : null;
 
-      if (filtrosAtivos.numeroOrcamento || filtrosAtivos.cliente || filtrosAtivos.statusOrcamento || filtrosAtivos.statusEntrega || filtrosAtivos.dataInicio || filtrosAtivos.dataFim) {
+      if (algumFiltroAtivo()) {
         mostrarMensagem("Filtros aplicados com sucesso.");
       }
       renderizarTabela();
