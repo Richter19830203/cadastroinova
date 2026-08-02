@@ -54,10 +54,17 @@
     const cadastroConteudoTiposServico = document.getElementById("cadastro-conteudo-tipos-servico");
     const loginOverlay = document.getElementById("login-overlay");
     const loginForm = document.getElementById("login-form");
-    const loginResponsavel = document.getElementById("loginResponsavel");
+    const loginEmail = document.getElementById("loginEmail");
     const loginSenha = document.getElementById("loginSenha");
+    const loginLembrar = document.getElementById("loginLembrar");
     const loginMessage = document.getElementById("login-message");
     const loginFecharButton = document.getElementById("login-fechar");
+    const loginEsqueciAbrirButton = document.getElementById("login-esqueci-abrir");
+    const esqueciSenhaOverlay = document.getElementById("esqueci-senha-overlay");
+    const esqueciSenhaForm = document.getElementById("esqueci-senha-form");
+    const esqueciEmail = document.getElementById("esqueciEmail");
+    const esqueciSenhaMessage = document.getElementById("esqueci-senha-message");
+    const esqueciSenhaVoltarButton = document.getElementById("esqueci-senha-voltar");
 
     const form = document.getElementById("orcamento-form");
     const tbody = document.getElementById("orcamentos-body");
@@ -153,6 +160,19 @@
     let apiDisponivel = false;
     let usuarioLogado = null;
     let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
+
+    // "Lembrar-me": promove uma sessao lembrada no localStorage para a
+    // sessao desta aba, caso ainda nao exista uma sessao ativa nela.
+    if (!sessionStorage.getItem(AUTH_USER_KEY) && localStorage.getItem(AUTH_USER_KEY)) {
+      sessionStorage.setItem(AUTH_USER_KEY, localStorage.getItem(AUTH_USER_KEY));
+      if (localStorage.getItem(AUTH_TOKEN_KEY)) {
+        sessionStorage.setItem(AUTH_TOKEN_KEY, localStorage.getItem(AUTH_TOKEN_KEY));
+        authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      }
+      if (localStorage.getItem(LOGIN_MODO_LOCAL_KEY)) {
+        sessionStorage.setItem(LOGIN_MODO_LOCAL_KEY, localStorage.getItem(LOGIN_MODO_LOCAL_KEY));
+      }
+    }
     let numeroOrcamentoReservado = null;
     const numerosLocaisReservados = new Set();
     const orcNumeroValorEl = document.getElementById("orc-numero-valor");
@@ -412,6 +432,8 @@
       document.body.classList.remove("app-locked");
       loginOverlay.hidden = true;
       loginOverlay.style.display = "none";
+      esqueciSenhaOverlay.hidden = true;
+      esqueciSenhaOverlay.style.display = "none";
     }
 
     function concluirLogin(nomeUsuario, token) {
@@ -420,6 +442,17 @@
       sessionStorage.setItem(AUTH_TOKEN_KEY, token);
       sessionStorage.setItem(AUTH_USER_KEY, nomeUsuario);
       sessionStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
+
+      if (loginLembrar && loginLembrar.checked) {
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+        localStorage.setItem(AUTH_USER_KEY, nomeUsuario);
+        localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
+      } else {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
+      }
+
       mostrarLoginMensagem("Acesso liberado.", "ok");
       liberarInterface();
       alternarAba("orcamentos");
@@ -458,11 +491,20 @@
       sessionStorage.setItem(AUTH_USER_KEY, nomeUsuario);
       sessionStorage.setItem(LOGIN_MODO_LOCAL_KEY, "1");
 
+      if (loginLembrar && loginLembrar.checked) {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.setItem(AUTH_USER_KEY, nomeUsuario);
+        localStorage.setItem(LOGIN_MODO_LOCAL_KEY, "1");
+      } else {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
+      }
+
       carregarDadosLocais();
       carregarResponsaveisIniciais();
       prepararNovoResponsavel();
       atualizarSelectResponsaveis();
-      atualizarSelectLoginResponsaveis();
       atualizarSelectsFinanceiro();
       atualizarSelectTipoServicoOrcamento();
       renderizarTabela();
@@ -505,17 +547,23 @@
     }
 
     function autenticarUsuario() {
-      const responsavel = loginResponsavel.value.trim().toUpperCase();
+      const identificador = loginEmail.value.trim();
       const senha = loginSenha.value.trim();
 
-      if (!responsavel || !senha) {
-        mostrarLoginMensagem("Selecione o responsavel e informe a senha.");
+      if (!identificador || !senha) {
+        mostrarLoginMensagem("Informe o e-mail (ou usuario) e a senha.");
         return Promise.resolve(false);
       }
 
+      const ehEmail = identificador.includes("@");
+      const corpo = ehEmail
+        ? { email: identificador.toLowerCase(), password: senha }
+        : { username: identificador.toUpperCase(), password: senha };
+      const responsavelLocal = identificador.toUpperCase();
+
       return apiRequest("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ username: responsavel, password: senha }),
+        body: JSON.stringify(corpo),
         skipAuth: true
       })
         .then((response) => {
@@ -527,12 +575,12 @@
           const ehErro401 = textoErro.includes("401") || textoErro.toLowerCase().includes("invalidos");
 
           if (ehErro401) {
-            mostrarLoginMensagem("Responsavel ou senha invalidos.");
+            mostrarLoginMensagem("E-mail/usuario ou senha invalidos.");
             return false;
           }
 
-          if (validarCredencialLocal(responsavel, senha)) {
-            ativarModoLocal(responsavel, "API indisponivel. Entrando em modo local.");
+          if (!ehEmail && validarCredencialLocal(responsavelLocal, senha)) {
+            ativarModoLocal(responsavelLocal, "API indisponivel. Entrando em modo local.");
             return true;
           }
 
@@ -1364,26 +1412,6 @@
       }
     }
 
-    function atualizarSelectLoginResponsaveis() {
-      const atual = loginResponsavel.value;
-      const opcoes = obterResponsaveis()
-        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
-        .map((item) => {
-          const nome = String(item.nome || "").trim().toUpperCase();
-          const label = nome === "INOVA" ? "INOVA (ADMIN)" : nome;
-          return `<option value="${nome}">${label}</option>`;
-        })
-        .join("");
-
-      loginResponsavel.innerHTML = `<option value="">Selecione</option>${opcoes}`;
-
-      if (atual && obterResponsaveis().some((item) => item.nome === atual)) {
-        loginResponsavel.value = atual;
-      } else {
-        loginResponsavel.value = "";
-      }
-    }
-
     function atualizarSelectTipoServicoOrcamento() {
       const atual = form.tipoServico.value;
       const ativos = obterTiposServico()
@@ -1723,9 +1751,8 @@
       responsaveisTbody.innerHTML = "";
 
       if (lista.length === 0) {
-        responsaveisTbody.innerHTML = "<tr><td colspan='5'>Nenhum responsavel cadastrado.</td></tr>";
+        responsaveisTbody.innerHTML = "<tr><td colspan='6'>Nenhum responsavel cadastrado.</td></tr>";
         atualizarSelectResponsaveis();
-        atualizarSelectLoginResponsaveis();
         atualizarSelectsFinanceiro();
         return;
       }
@@ -1738,6 +1765,7 @@
             <td data-label="Nome">${item.nome}</td>
             <td data-label="RG">${item.rg || "-"}</td>
             <td data-label="Telefone">${item.telefone || "-"}</td>
+            <td data-label="E-mail">${item.email || "-"}</td>
             <td data-label="Acoes">
               <div class="table-actions">
                 <button type="button" class="btn-secondary" data-edit-responsavel="${item.id}">Editar</button>
@@ -1750,7 +1778,6 @@
 
       responsaveisTbody.innerHTML = html;
       atualizarSelectResponsaveis();
-      atualizarSelectLoginResponsaveis();
       atualizarSelectsFinanceiro();
     }
 
@@ -1860,6 +1887,7 @@
       responsavelForm.responsavelNome.value = item.nome || "";
       responsavelForm.responsavelRg.value = item.rg || "";
       responsavelForm.responsavelTelefone.value = item.telefone || "";
+      responsavelForm.responsavelEmail.value = item.email || "";
       responsavelForm.responsavelSenha.value = "";
       responsavelForm.responsavelNome.focus();
     }
@@ -1868,6 +1896,7 @@
       const nome = responsavelForm.responsavelNome.value.trim().toUpperCase();
       const rg = responsavelForm.responsavelRg.value.trim();
       const telefone = responsavelForm.responsavelTelefone.value.trim();
+      const email = responsavelForm.responsavelEmail.value.trim();
       const senha = responsavelForm.responsavelSenha.value.trim();
       const editando = Boolean(responsavelForm.codigoEdicaoResponsavel.value);
 
@@ -1883,7 +1912,7 @@
         return { invalido: "A senha deve ter pelo menos 6 caracteres." };
       }
 
-      return { nome, rg, telefone, senha };
+      return { nome, rg, telefone, email, senha };
     }
 
     function prepararNovoResponsavel() {
@@ -2477,6 +2506,33 @@
 
     loginFecharButton.addEventListener("click", () => {
       mostrarLoginMensagem("Acesso bloqueado ate realizar login.");
+    });
+
+    loginEsqueciAbrirButton.addEventListener("click", () => {
+      esqueciEmail.value = loginEmail.value.trim();
+      esqueciSenhaMessage.textContent = "";
+      esqueciSenhaOverlay.hidden = false;
+      esqueciSenhaOverlay.style.display = "flex";
+      esqueciEmail.focus();
+    });
+
+    esqueciSenhaVoltarButton.addEventListener("click", () => {
+      esqueciSenhaOverlay.hidden = true;
+      esqueciSenhaOverlay.style.display = "none";
+    });
+
+    esqueciSenhaForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const emailInformado = esqueciEmail.value.trim();
+
+      if (!emailInformado) {
+        esqueciSenhaMessage.textContent = "Informe o e-mail cadastrado.";
+        esqueciSenhaMessage.style.color = "#b42318";
+        return;
+      }
+
+      esqueciSenhaMessage.textContent = "Envio de e-mail ainda nao configurado. Peca pra INOVA redefinir sua senha manualmente na aba Cadastro.";
+      esqueciSenhaMessage.style.color = "#1f6fa8";
     });
 
     form.contato.addEventListener("input", () => {

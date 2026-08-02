@@ -90,6 +90,14 @@ async function ensureUsersTable(target = pool) {
       atualizado_em TIMESTAMPTZ
     );
   `);
+  await target.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email TEXT");
+  await target.query(
+    "CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_lower_idx ON usuarios (LOWER(email)) WHERE email IS NOT NULL"
+  );
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 function signAuthToken(username) {
@@ -436,6 +444,7 @@ async function initSchema() {
       atualizado_em TIMESTAMPTZ
     );
   `);
+  await pool.query("ALTER TABLE responsaveis ADD COLUMN IF NOT EXISTS email TEXT");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS motoristas (
@@ -584,20 +593,27 @@ app.get("/api/health", async (_req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   try {
-    const username = normalizeUserName(req.body && req.body.username);
+    const identificadorBruto = (req.body && (req.body.email || req.body.username)) || "";
     const password = String(req.body && req.body.password ? req.body.password : "");
 
-    if (!username || !password) {
-      return res.status(400).json({ error: "Usuario e senha sao obrigatorios" });
+    if (!identificadorBruto || !password) {
+      return res.status(400).json({ error: "E-mail (ou usuario) e senha sao obrigatorios" });
     }
+
+    // O campo de login aceita tanto um e-mail cadastrado quanto o nome do
+    // responsavel (usado antes de todo mundo ter e-mail cadastrado).
+    const pareceEmail = identificadorBruto.includes("@");
+    const email = pareceEmail ? normalizeEmail(identificadorBruto) : null;
+    const username = pareceEmail ? null : normalizeUserName(identificadorBruto);
 
     const result = await pool.query(
       `
       SELECT username, password_salt, password_hash, role_name
       FROM usuarios
-      WHERE username = $1
+      WHERE ($1::text IS NOT NULL AND LOWER(email) = $1)
+         OR ($2::text IS NOT NULL AND username = $2)
       `,
-      [username]
+      [email, username]
     );
 
     const user = result.rows[0];
@@ -612,7 +628,7 @@ app.post("/api/auth/login", async (req, res) => {
       });
     }
 
-    const fallbackPassword = FALLBACK_AUTH_CREDENTIALS[username];
+    const fallbackPassword = username ? FALLBACK_AUTH_CREDENTIALS[username] : null;
     if (!user && fallbackPassword && fallbackPassword === password) {
       const token = signAuthToken(username);
       return res.json({
@@ -625,7 +641,7 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
-      return res.status(401).json({ error: "Usuario ou senha invalidos" });
+      return res.status(401).json({ error: "E-mail/usuario ou senha invalidos" });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -744,6 +760,7 @@ app.get("/api/responsaveis", async (_req, res) => {
         nome,
         COALESCE(rg, '') AS rg,
         COALESCE(telefone, '') AS telefone,
+        COALESCE(email, '') AS email,
         criado_em AS "criadoEm",
         atualizado_em AS "atualizadoEm"
       FROM responsaveis
@@ -768,6 +785,7 @@ app.put("/api/responsaveis/bulk", async (req, res) => {
       nomeAnterior: normalizeUserName(item.nomeAnterior || item.nome),
       rg: item.rg || "",
       telefone: item.telefone || "",
+      email: normalizeEmail(item.email) || null,
       senha: String(item.senha || "").trim(),
       criadoEm: item.criadoEm || new Date().toISOString(),
       atualizadoEm: item.atualizadoEm || null
@@ -800,14 +818,15 @@ app.put("/api/responsaveis/bulk", async (req, res) => {
       await client.query(
         `
         INSERT INTO responsaveis (
-          id, nome, rg, telefone, criado_em, atualizado_em
-        ) VALUES ($1,$2,$3,$4,$5,$6)
+          id, nome, rg, telefone, email, criado_em, atualizado_em
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7)
         `,
         [
           item.id,
           item.nome,
           item.rg,
           item.telefone,
+          item.email,
           item.criadoEm,
           item.atualizadoEm
         ]
@@ -831,15 +850,16 @@ app.put("/api/responsaveis/bulk", async (req, res) => {
 
       await client.query(
         `
-        INSERT INTO usuarios (username, password_salt, password_hash, role_name, atualizado_em)
-        VALUES ($1, $2, $3, $4, NOW())
+        INSERT INTO usuarios (username, password_salt, password_hash, role_name, email, atualizado_em)
+        VALUES ($1, $2, $3, $4, $5, NOW())
         ON CONFLICT (username) DO UPDATE SET
           password_salt = EXCLUDED.password_salt,
           password_hash = EXCLUDED.password_hash,
           role_name = EXCLUDED.role_name,
+          email = EXCLUDED.email,
           atualizado_em = NOW();
         `,
-        [item.nome, passwordSalt, passwordHash, roleName]
+        [item.nome, passwordSalt, passwordHash, roleName, item.email]
       );
 
       if (item.nomeAnterior && item.nomeAnterior !== item.nome) {

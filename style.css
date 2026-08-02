@@ -722,6 +722,61 @@
       font-size: 0.8rem;
     }
 
+    .login-opcoes {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      margin-top: -6px;
+    }
+
+    .login-lembrar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.84rem;
+    }
+
+    .login-lembrar input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--brand);
+    }
+
+    .login-esqueci {
+      border: 0;
+      background: none;
+      padding: 0;
+      font: inherit;
+      font-weight: 700;
+      color: var(--brand-strong);
+      cursor: pointer;
+    }
+
+    .login-esqueci:hover {
+      text-decoration: underline;
+    }
+
+    .login-aviso-indisponivel {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: rgba(184, 134, 11, 0.1);
+      border: 1px solid rgba(184, 134, 11, 0.35);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.84rem;
+      color: #7a5c05;
+      grid-column: span 12;
+    }
+
+    .login-aviso-indisponivel svg {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
     /* ===== Aba Graficos ===== */
     :root {
       --graf-maior: #1f8f45;

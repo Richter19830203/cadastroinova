@@ -14,27 +14,21 @@
   <div class="login-overlay" id="login-overlay">
     <section class="login-card" aria-labelledby="login-title">
       <h2 id="login-title">Acesso restrito INOVA</h2>
-      <p>Informe seu responsavel e a senha para liberar o uso da pagina.</p>
+      <p>Entre com seu e-mail e senha para acessar o sistema.</p>
       <form id="login-form" novalidate>
         <div class="field">
-          <label for="loginResponsavel">Responsavel</label>
-          <select id="loginResponsavel" name="loginResponsavel" required>
-            <option value="">Selecione</option>
-            <option value="ALLAN">ALLAN</option>
-            <option value="ALLANA">ALLANA</option>
-            <option value="ANDERSON">ANDERSON</option>
-            <option value="BIANCA">BIANCA</option>
-            <option value="FABIOLA">FABIOLA</option>
-            <option value="GIOVANNA">GIOVANNA</option>
-            <option value="INOVA">INOVA (ADMIN)</option>
-            <option value="MARIA">MARIA</option>
-            <option value="PEDRO">PEDRO</option>
-          </select>
+          <label for="loginEmail">E-mail</label>
+          <input id="loginEmail" name="loginEmail" type="text" required autocomplete="username" placeholder="seuemail@exemplo.com">
         </div>
 
         <div class="field">
           <label for="loginSenha">Senha</label>
           <input id="loginSenha" name="loginSenha" type="password" required autocomplete="current-password" placeholder="Digite a senha">
+        </div>
+
+        <div class="login-opcoes">
+          <label class="login-lembrar"><input id="loginLembrar" name="loginLembrar" type="checkbox"> Lembrar-me</label>
+          <button class="login-esqueci" type="button" id="login-esqueci-abrir">Esqueci minha senha?</button>
         </div>
 
         <div class="actions">
@@ -43,6 +37,30 @@
         </div>
       </form>
       <small id="login-message"></small>
+    </section>
+  </div>
+
+  <div class="login-overlay" id="esqueci-senha-overlay" hidden>
+    <section class="login-card" aria-labelledby="esqueci-senha-title">
+      <h2 id="esqueci-senha-title">Recuperar acesso</h2>
+      <p>Informe o e-mail cadastrado. Se ele estiver na base, enviaremos um link para você criar uma senha nova.</p>
+      <form id="esqueci-senha-form" novalidate>
+        <div class="field">
+          <label for="esqueciEmail">E-mail cadastrado</label>
+          <input id="esqueciEmail" name="esqueciEmail" type="email" required placeholder="seuemail@exemplo.com">
+        </div>
+
+        <div class="login-aviso-indisponivel">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 9v4M12 17h.01M10.29 3.86l-8.18 14.14A2 2 0 0 0 3.82 21h16.36a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <span>Envio de e-mail ainda não configurado. Por enquanto, peça pra INOVA redefinir sua senha manualmente na aba Cadastro.</span>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" type="submit">Enviar link de recuperação</button>
+          <button class="btn-secondary" type="button" id="esqueci-senha-voltar">Voltar ao login</button>
+        </div>
+      </form>
+      <small id="esqueci-senha-message"></small>
     </section>
   </div>
 
@@ -614,6 +632,11 @@
             </div>
 
             <div class="field w3">
+              <label for="responsavelEmail">E-mail</label>
+              <input id="responsavelEmail" name="responsavelEmail" type="email" maxlength="150" placeholder="email@exemplo.com">
+            </div>
+
+            <div class="field w3">
               <label for="responsavelSenha">Senha de acesso</label>
               <input id="responsavelSenha" name="responsavelSenha" type="password" minlength="6" placeholder="Crie a senha do responsavel">
             </div>
@@ -636,12 +659,13 @@
                   <th>Nome</th>
                   <th>RG</th>
                   <th>Telefone</th>
+                  <th>E-mail</th>
                   <th>Acoes</th>
                 </tr>
               </thead>
               <tbody id="responsaveis-body">
                 <tr>
-                  <td colspan="5">Nenhum responsavel cadastrado.</td>
+                  <td colspan="6">Nenhum responsavel cadastrado.</td>
                 </tr>
               </tbody>
             </table>
