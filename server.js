@@ -424,6 +424,9 @@ async function initSchema() {
   await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS tipo_servico_id INTEGER");
   await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS tipo_servico_descricao TEXT");
   await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS numero INTEGER");
+  await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cep_origem TEXT");
+  await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cep_destino TEXT");
+  await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS distancia NUMERIC");
   await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS orcamentos_numero_idx ON orcamentos(numero) WHERE numero IS NOT NULL");
 
   await pool.query(`
@@ -1514,6 +1517,97 @@ app.post("/api/orcamentos/numero/reservar", async (req, res) => {
   }
 });
 
+function normalizarCep(value) {
+  const digitos = String(value || "").replace(/\D/g, "");
+  return digitos.length === 8 ? digitos : null;
+}
+
+async function geocodificarCidadeUF(cidade, uf) {
+  const consulta = encodeURIComponent(`${cidade}, ${uf}, Brazil`);
+  const resposta = await fetch(`https://nominatim.openstreetmap.org/search?q=${consulta}&format=json&limit=1`, {
+    headers: { "User-Agent": "inova-transportadora-app/1.0" }
+  });
+  if (!resposta.ok) {
+    return null;
+  }
+  const dados = await resposta.json();
+  const item = Array.isArray(dados) ? dados[0] : null;
+  if (!item) {
+    return null;
+  }
+  return { latitude: Number(item.lat), longitude: Number(item.lon) };
+}
+
+async function geocodificarCep(cep) {
+  const resposta = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
+  if (!resposta.ok) {
+    return null;
+  }
+  const dados = await resposta.json();
+  const coordenadas = dados && dados.location && dados.location.coordinates;
+  if (coordenadas && coordenadas.latitude && coordenadas.longitude) {
+    return { latitude: Number(coordenadas.latitude), longitude: Number(coordenadas.longitude) };
+  }
+  if (dados && dados.city && dados.state) {
+    return geocodificarCidadeUF(dados.city, dados.state);
+  }
+  return null;
+}
+
+async function calcularDistanciaRodoviaria(origem, destino) {
+  const resposta = await fetch("https://api.openrouteservice.org/v2/directions/driving-car", {
+    method: "POST",
+    headers: {
+      Authorization: process.env.ORS_API_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      coordinates: [
+        [origem.longitude, origem.latitude],
+        [destino.longitude, destino.latitude]
+      ]
+    })
+  });
+
+  if (!resposta.ok) {
+    throw new Error(`Falha ao calcular a rota (OpenRouteService respondeu ${resposta.status})`);
+  }
+
+  const dados = await resposta.json();
+  const metros = dados.routes && dados.routes[0] && dados.routes[0].summary ? dados.routes[0].summary.distance : null;
+  if (metros == null) {
+    throw new Error("Resposta da OpenRouteService sem distancia.");
+  }
+
+  return Math.round((metros / 1000) * 100) / 100;
+}
+
+app.post("/api/distancia", async (req, res) => {
+  try {
+    const cepOrigem = normalizarCep(req.body && req.body.cepOrigem);
+    const cepDestino = normalizarCep(req.body && req.body.cepDestino);
+
+    if (!cepOrigem || !cepDestino) {
+      return res.status(400).json({ error: "Informe os dois CEPs (origem e destino) com 8 digitos." });
+    }
+
+    if (!process.env.ORS_API_KEY) {
+      return res.status(503).json({ error: "Calculo automatico de distancia ainda nao configurado (chave da OpenRouteService pendente)." });
+    }
+
+    const [origem, destino] = await Promise.all([geocodificarCep(cepOrigem), geocodificarCep(cepDestino)]);
+
+    if (!origem || !destino) {
+      return res.status(422).json({ error: "Nao foi possivel localizar um dos CEPs informados." });
+    }
+
+    const distanciaKm = await calcularDistanciaRodoviaria(origem, destino);
+    res.json({ distanciaKm });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/orcamentos", async (_req, res) => {
   try {
     const result = await pool.query(`
@@ -1529,6 +1623,9 @@ app.get("/api/orcamentos", async (_req, res) => {
         origem_uf AS "origemUF",
         destino,
         destino_uf AS "destinoUF",
+        cep_origem AS "cepOrigem",
+        cep_destino AS "cepDestino",
+        distancia,
         itens_produto AS "itensProduto",
         quantidade,
         descricao,
@@ -1556,9 +1653,9 @@ app.get("/api/orcamentos", async (_req, res) => {
 
 const ORCAMENTOS_BULK_COLUNAS = [
   "codigo", "numero", "criado_em", "atualizado_em", "cliente", "a_c", "contato", "origem", "origem_uf",
-  "destino", "destino_uf", "itens_produto", "quantidade", "descricao", "tipo_veiculo", "tipo_servico_id",
-  "tipo_servico_descricao", "tipo_carga", "peso", "volume", "prazo", "valor", "validade",
-  "status_orcamento", "status_entrega", "responsavel", "observacoes"
+  "destino", "destino_uf", "cep_origem", "cep_destino", "distancia", "itens_produto", "quantidade", "descricao",
+  "tipo_veiculo", "tipo_servico_id", "tipo_servico_descricao", "tipo_carga", "peso", "volume", "prazo", "valor",
+  "validade", "status_orcamento", "status_entrega", "responsavel", "observacoes"
 ];
 const ORCAMENTOS_BULK_LOTE = 200;
 
@@ -1575,6 +1672,9 @@ function orcamentoParaValores(item) {
     item.origemUF || null,
     item.destino,
     item.destinoUF || null,
+    item.cepOrigem || null,
+    item.cepDestino || null,
+    item.distancia !== "" && item.distancia != null ? Number(item.distancia) : null,
     Array.isArray(item.itensProduto) && item.itensProduto.length > 0 ? JSON.stringify(item.itensProduto) : null,
     item.quantidade !== "" && item.quantidade != null ? Number(item.quantidade) : null,
     item.descricao || null,

@@ -360,6 +360,23 @@
       font-weight: 700;
     }
 
+    .distancia-status {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .distancia-status.ok {
+      color: #1f8f45;
+      font-weight: 700;
+    }
+
+    .distancia-status.erro {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
     .actions {
       grid-column: span 12;
       display: flex;
