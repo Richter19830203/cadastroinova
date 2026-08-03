@@ -1522,9 +1522,14 @@ function normalizarCep(value) {
   return digitos.length === 8 ? digitos : null;
 }
 
-async function geocodificarCidadeUF(cidade, uf) {
-  const consulta = encodeURIComponent(`${cidade}, ${uf}, Brazil`);
-  const resposta = await fetch(`https://nominatim.openstreetmap.org/search?q=${consulta}&format=json&limit=1`, {
+async function geocodificarEstruturado({ street, city, state, postalcode }) {
+  const params = new URLSearchParams({ format: "json", limit: "1", country: "Brazil" });
+  if (street) params.set("street", street);
+  if (city) params.set("city", city);
+  if (state) params.set("state", state);
+  if (postalcode) params.set("postalcode", postalcode);
+
+  const resposta = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
     headers: { "User-Agent": "inova-transportadora-app/1.0" }
   });
   if (!resposta.ok) {
@@ -1548,10 +1553,26 @@ async function geocodificarCep(cep) {
   if (coordenadas && coordenadas.latitude && coordenadas.longitude) {
     return { latitude: Number(coordenadas.latitude), longitude: Number(coordenadas.longitude) };
   }
-  if (dados && dados.city && dados.state) {
-    return geocodificarCidadeUF(dados.city, dados.state);
+
+  if (!dados || !dados.city || !dados.state) {
+    return null;
   }
-  return null;
+
+  const cepFormatado = `${cep.slice(0, 5)}-${cep.slice(5)}`;
+
+  if (dados.street) {
+    const porRua = await geocodificarEstruturado({
+      street: dados.street,
+      city: dados.city,
+      state: dados.state,
+      postalcode: cepFormatado
+    });
+    if (porRua) {
+      return porRua;
+    }
+  }
+
+  return geocodificarEstruturado({ city: dados.city, state: dados.state, postalcode: cepFormatado });
 }
 
 async function calcularDistanciaRodoviaria(origem, destino) {
@@ -1599,6 +1620,15 @@ app.post("/api/distancia", async (req, res) => {
 
     if (!origem || !destino) {
       return res.status(422).json({ error: "Nao foi possivel localizar um dos CEPs informados." });
+    }
+
+    const mesmoPonto =
+      Math.abs(origem.latitude - destino.latitude) < 0.001 &&
+      Math.abs(origem.longitude - destino.longitude) < 0.001;
+    if (mesmoPonto && cepOrigem !== cepDestino) {
+      return res.status(422).json({
+        error: "Nao foi possivel diferenciar a localizacao exata desses dois CEPs (ficaram no mesmo ponto no mapa). Preencha a distancia manualmente."
+      });
     }
 
     const distanciaKm = await calcularDistanciaRodoviaria(origem, destino);
