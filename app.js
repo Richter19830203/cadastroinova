@@ -853,7 +853,8 @@
         const itens = itensOrigem
           .map((produto) => ({
             quantidade: String(produto && produto.quantidade != null ? produto.quantidade : "").trim(),
-            descricao: String(produto && produto.descricao != null ? produto.descricao : "").trim()
+            descricao: String(produto && produto.descricao != null ? produto.descricao : "").trim(),
+            valor: String(produto && produto.valor != null ? produto.valor : "").trim()
           }))
           .filter((produto) => produto.quantidade || produto.descricao);
         if (itens.length > 0) {
@@ -864,13 +865,13 @@
       const quantidadeLegada = String(item.quantidade != null ? item.quantidade : "").trim();
       const descricaoLegada = String(item.descricao != null ? item.descricao : "").trim();
       if (quantidadeLegada || descricaoLegada) {
-        return [{ quantidade: quantidadeLegada, descricao: descricaoLegada }];
+        return [{ quantidade: quantidadeLegada, descricao: descricaoLegada, valor: "" }];
       }
 
       return [];
     }
 
-    function criarLinhaProduto(item = { quantidade: "", descricao: "" }) {
+    function criarLinhaProduto(item = { quantidade: "", descricao: "", valor: "" }) {
       const linha = document.createElement("div");
       linha.className = "produto-item";
       linha.innerHTML = `
@@ -882,14 +883,28 @@
           <label>Descricao do Produto</label>
           <input type="text" class="produto-descricao" maxlength="200" placeholder="Ex.: Caixa de documentos" value="${String(item.descricao || "").replace(/"/g, "&quot;")}">
         </div>
+        <div class="produto-campo">
+          <label>Valor (R$)</label>
+          <input type="number" class="produto-valor" min="0" step="0.01" placeholder="0,00" value="${String(item.valor || "").replace(/"/g, "&quot;")}">
+        </div>
+        <div class="produto-campo">
+          <label>Subtotal</label>
+          <input type="text" class="produto-subtotal" disabled value="${formatarMoeda(calcularSubtotalProduto(item))}">
+        </div>
         <button type="button" class="btn-secondary produto-remover">Remover</button>
       `;
       return linha;
     }
 
+    function calcularSubtotalProduto(item) {
+      const quantidade = Number(item && item.quantidade) || 0;
+      const valor = Number(item && item.valor) || 0;
+      return quantidade * valor;
+    }
+
     function renderizarItensProdutoFormulario(itens) {
       produtosListaEl.innerHTML = "";
-      const lista = Array.isArray(itens) && itens.length > 0 ? itens : [{ quantidade: "", descricao: "" }];
+      const lista = Array.isArray(itens) && itens.length > 0 ? itens : [{ quantidade: "", descricao: "", valor: "" }];
       lista.forEach((item) => {
         produtosListaEl.appendChild(criarLinhaProduto(item));
       });
@@ -913,15 +928,38 @@
         .map((linha) => {
           const quantidadeEl = linha.querySelector(".produto-quantidade");
           const descricaoEl = linha.querySelector(".produto-descricao");
+          const valorEl = linha.querySelector(".produto-valor");
           const quantidade = String(quantidadeEl && quantidadeEl.value != null ? quantidadeEl.value : "").trim();
           const descricao = String(descricaoEl && descricaoEl.value != null ? descricaoEl.value : "").trim();
-          return { quantidade, descricao };
+          const valor = String(valorEl && valorEl.value != null ? valorEl.value : "").trim();
+          return { quantidade, descricao, valor };
         })
         .filter((produto) => produto.quantidade || produto.descricao);
     }
 
+    function calcularValorTotalProdutos() {
+      return coletarItensProdutoFormulario().reduce((total, item) => total + calcularSubtotalProduto(item), 0);
+    }
+
+    function atualizarValorTotalCalculado() {
+      const linhas = Array.from(produtosListaEl.querySelectorAll(".produto-item"));
+      linhas.forEach((linha) => {
+        const quantidadeEl = linha.querySelector(".produto-quantidade");
+        const valorEl = linha.querySelector(".produto-valor");
+        const subtotalEl = linha.querySelector(".produto-subtotal");
+        if (subtotalEl) {
+          subtotalEl.value = formatarMoeda(calcularSubtotalProduto({
+            quantidade: quantidadeEl ? quantidadeEl.value : "",
+            valor: valorEl ? valorEl.value : ""
+          }));
+        }
+      });
+      form.valor.value = calcularValorTotalProdutos().toFixed(2);
+    }
+
     function resetarItensProdutoFormulario() {
-      renderizarItensProdutoFormulario([{ quantidade: "", descricao: "" }]);
+      renderizarItensProdutoFormulario([{ quantidade: "", descricao: "", valor: "" }]);
+      atualizarValorTotalCalculado();
     }
 
     function converterDataBRparaISO(dataBR) {
@@ -2189,14 +2227,28 @@
       document.getElementById("prop-data").textContent = hoje;
       const itensProduto = normalizarItensProduto(dados);
       const produtosPropostaEl = document.getElementById("prop-produtos-lista");
+      const linhaTotal = `
+        <tr class="proposal-total-row">
+          <td colspan="3">TOTAL:</td>
+          <td><span class="proposal-hl">${formatarMoeda(dados.valor)}</span></td>
+        </tr>
+      `;
       if (itensProduto.length === 0) {
-        produtosPropostaEl.innerHTML = "<tr><td colspan='2'>Nenhum produto informado.</td></tr>";
+        produtosPropostaEl.innerHTML = "<tr><td colspan='4'>Nenhum produto informado.</td></tr>" + linhaTotal;
       } else {
-        produtosPropostaEl.innerHTML = itensProduto
-          .map((item) => `<tr><td>${item.quantidade || "-"}</td><td>${item.descricao || "-"}</td></tr>`)
+        const linhasProdutos = itensProduto
+          .map((item) => `
+            <tr>
+              <td>${item.quantidade || "-"}</td>
+              <td>${item.descricao || "-"}</td>
+              <td>${formatarMoeda(item.valor)}</td>
+              <td>${formatarMoeda(calcularSubtotalProduto(item))}</td>
+            </tr>
+          `)
           .join("");
+        produtosPropostaEl.innerHTML = linhasProdutos + linhaTotal;
       }
-      
+
       const tipoVeiculo = dados.tipoVeiculo;
       const tipoServicoDescricao = dados.tipoServicoDescricao || "-";
       const mapVeiculos = {
@@ -2231,7 +2283,6 @@
       document.getElementById("prop-origem-uf").textContent = dados.origemUF || extrairUF(dados.origem);
       document.getElementById("prop-destino").textContent = dados.destino || "-";
       document.getElementById("prop-destino-uf").textContent = dados.destinoUF || extrairUF(dados.destino);
-      document.getElementById("prop-valor").textContent = formatarMoeda(dados.valor || 0);
       document.getElementById("prop-responsavel").textContent = dados.responsavel || "-";
       document.getElementById("prop-status-orc").textContent = dados.statusOrcamento || "-";
       document.getElementById("prop-status-ent").textContent = dados.statusEntrega || "-";
@@ -2544,8 +2595,9 @@
     });
 
     adicionarProdutoButton.addEventListener("click", () => {
-      produtosListaEl.appendChild(criarLinhaProduto({ quantidade: "", descricao: "" }));
+      produtosListaEl.appendChild(criarLinhaProduto({ quantidade: "", descricao: "", valor: "" }));
       atualizarBotoesRemoverProduto();
+      atualizarValorTotalCalculado();
     });
 
     produtosListaEl.addEventListener("click", (event) => {
@@ -2565,6 +2617,14 @@
       }
       linha.remove();
       atualizarBotoesRemoverProduto();
+      atualizarValorTotalCalculado();
+    });
+
+    produtosListaEl.addEventListener("input", (event) => {
+      const alvo = event.target;
+      if (alvo instanceof HTMLInputElement && (alvo.classList.contains("produto-quantidade") || alvo.classList.contains("produto-valor"))) {
+        atualizarValorTotalCalculado();
+      }
     });
 
     loginForm.addEventListener("submit", async (event) => {
