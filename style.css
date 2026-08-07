@@ -1503,6 +1503,106 @@
       }
     }
 
+    /* ===== Popups de confirmacao (excluir orcamento / sessao encerrada) ===== */
+    .confirm-card {
+      text-align: center;
+    }
+
+    .confirm-icone {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .confirm-icone.alerta {
+      background: rgba(188, 47, 27, 0.12);
+      color: var(--danger);
+    }
+
+    .confirm-icone.aviso {
+      background: rgba(184, 134, 11, 0.12);
+      color: #b8860b;
+    }
+
+    .confirm-card h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .confirm-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .confirm-acoes {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .btn-perigo {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.88rem;
+      background: var(--danger);
+      color: #fff;
+    }
+
+    /* ===== Usuario logado + Sair ===== */
+    .usuario-logado-chip {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 8px 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--brand-strong);
+      box-shadow: 0 6px 16px rgba(31, 87, 130, 0.16);
+    }
+
+    .btn-sair {
+      border: 0;
+      background: var(--danger);
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font: inherit;
+      font-weight: 800;
+      font-size: 0.74rem;
+      cursor: pointer;
+    }
+
+    .meu-cadastro-aviso {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      .usuario-logado-chip strong {
+        display: none;
+      }
+    }
+
     /* ===== Sistema de versionamento (badge + menu + modal Sobre) ===== */
     .menu-sobre {
       position: fixed;
@@ -1532,6 +1632,11 @@
       display: grid;
       justify-items: end;
       gap: 8px;
+      pointer-events: none;
+    }
+
+    .version-badge-wrap .version-badge {
+      pointer-events: auto;
     }
 
     .version-badge {

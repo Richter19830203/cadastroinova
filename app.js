@@ -112,6 +112,21 @@
     const responsavelMessage = document.getElementById("mensagem-responsavel");
     const responsaveisTbody = document.getElementById("responsaveis-body");
     const clearResponsavelButton = document.getElementById("limpar-responsavel-formulario");
+    const tituloResponsavelFormulario = document.getElementById("titulo-responsavel-formulario");
+    const responsavelFormularioSub = document.getElementById("responsavel-formulario-sub");
+    const campoResponsavelId = document.getElementById("campo-responsavel-id");
+    const secaoResponsaveisListagem = document.getElementById("secao-responsaveis-listagem");
+
+    const confirmarExclusaoOverlay = document.getElementById("confirmar-exclusao-overlay");
+    const confirmarExclusaoTexto = document.getElementById("confirmar-exclusao-texto");
+    const confirmarExclusaoSimButton = document.getElementById("confirmar-exclusao-sim");
+    const confirmarExclusaoNaoButton = document.getElementById("confirmar-exclusao-nao");
+
+    const sessaoEncerradaOverlay = document.getElementById("sessao-encerrada-overlay");
+    const sessaoEncerradaOkButton = document.getElementById("sessao-encerrada-ok");
+    const usuarioLogadoChip = document.getElementById("usuario-logado-chip");
+    const usuarioLogadoNomeEl = document.getElementById("usuario-logado-nome");
+    const botaoSairButton = document.getElementById("botao-sair");
 
     const motoristaForm = document.getElementById("motorista-form");
     const motoristaMessage = document.getElementById("mensagem-motorista");
@@ -177,6 +192,8 @@
     let opcoesLookupCache = {};
     let apiDisponivel = false;
     let usuarioLogado = null;
+    let codigoOrcamentoPendenteExclusao = null;
+    let sessaoEncerradaAtiva = false;
     let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
 
     // "Lembrar-me": promove uma sessao lembrada no localStorage para a
@@ -444,6 +461,7 @@
       loginOverlay.style.display = "flex";
       loginSenha.value = "";
       loginSenha.focus();
+      ocultarChipUsuario();
     }
 
     function liberarInterface() {
@@ -452,9 +470,63 @@
       loginOverlay.style.display = "none";
       esqueciSenhaOverlay.hidden = true;
       esqueciSenhaOverlay.style.display = "none";
+      atualizarChipUsuario();
+    }
+
+    function ocultarChipUsuario() {
+      usuarioLogadoChip.hidden = true;
+      usuarioLogadoChip.style.display = "none";
+    }
+
+    function atualizarChipUsuario() {
+      if (!usuarioLogado) {
+        ocultarChipUsuario();
+        return;
+      }
+      usuarioLogadoNomeEl.textContent = usuarioLogado;
+      usuarioLogadoChip.hidden = false;
+      usuarioLogadoChip.style.display = "flex";
+    }
+
+    async function sair() {
+      try {
+        await apiRequest("/auth/logout", { method: "POST" });
+      } catch (_error) {
+        // segue com o logout local mesmo se a chamada falhar (ex.: API indisponivel)
+      }
+      authToken = "";
+      usuarioLogado = null;
+      sessionStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(AUTH_USER_KEY);
+      sessionStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
+      bloquearInterface();
+      mostrarLoginMensagem("Você saiu do sistema.", "ok");
+    }
+
+    function tratarSessaoEncerrada() {
+      if (!sessaoEncerradaOverlay.hidden) {
+        return;
+      }
+      sessaoEncerradaAtiva = true;
+      authToken = "";
+      usuarioLogado = null;
+      sessionStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(AUTH_USER_KEY);
+      sessionStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
+      document.body.classList.add("app-locked");
+      ocultarChipUsuario();
+      sessaoEncerradaOverlay.hidden = false;
+      sessaoEncerradaOverlay.style.display = "flex";
     }
 
     function concluirLogin(nomeUsuario, token) {
+      sessaoEncerradaAtiva = false;
       authToken = token;
       usuarioLogado = nomeUsuario;
       sessionStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -1085,6 +1157,18 @@
 
       if (!response.ok) {
         const body = await response.text();
+
+        if (response.status === 401 && !options.skipAuth) {
+          try {
+            const corpo = JSON.parse(body || "{}");
+            if (corpo && corpo.motivo === "sessao_substituida") {
+              tratarSessaoEncerrada();
+            }
+          } catch (_erroParse) {
+            // corpo nao era JSON, segue o fluxo normal de erro
+          }
+        }
+
         throw new Error(body || `Erro HTTP ${response.status}`);
       }
 
@@ -1307,6 +1391,26 @@
       });
 
       responsaveisCache = lista.map(({ senha, nomeAnterior, ...item }) => ({ ...item }));
+      localStorage.setItem(RESPONSAVEL_STORAGE_KEY, JSON.stringify(responsaveisCache));
+    }
+
+    async function salvarMeuCadastro(dados) {
+      if (!apiDisponivel) {
+        throw new Error("Editar o cadastro exige a API ativa.");
+      }
+
+      await apiRequest("/responsaveis/me", {
+        method: "PUT",
+        body: JSON.stringify({
+          rg: dados.rg,
+          telefone: dados.telefone,
+          email: dados.email,
+          senha: dados.senha
+        })
+      });
+
+      const dadosIniciais = await apiRequest("/responsaveis");
+      responsaveisCache = Array.isArray(dadosIniciais) ? dadosIniciais : responsaveisCache;
       localStorage.setItem(RESPONSAVEL_STORAGE_KEY, JSON.stringify(responsaveisCache));
     }
 
@@ -1890,9 +1994,30 @@
       clienteForm.clienteNome.focus();
     }
 
+    function configurarPermissaoResponsaveis() {
+      const admin = ehAdmin();
+      tituloResponsavelFormulario.textContent = admin ? "Cadastro de Responsaveis" : "Meu Cadastro";
+      responsavelFormularioSub.hidden = admin;
+      responsavelFormularioSub.style.display = admin ? "none" : "block";
+      campoResponsavelId.hidden = !admin;
+      campoResponsavelId.style.display = admin ? "grid" : "none";
+      secaoResponsaveisListagem.hidden = !admin;
+      secaoResponsaveisListagem.style.display = admin ? "block" : "none";
+      responsavelForm.responsavelNome.readOnly = !admin;
+
+      if (!admin) {
+        const nomeAtual = String(usuarioLogado || "").trim().toUpperCase();
+        const proprio = obterResponsaveis().find((item) => String(item.nome || "").trim().toUpperCase() === nomeAtual);
+        if (proprio) {
+          preencherFormularioResponsavel(proprio);
+        }
+      }
+    }
+
     function renderizarResponsaveis() {
       const lista = obterResponsaveis();
       responsaveisTbody.innerHTML = "";
+      configurarPermissaoResponsaveis();
 
       if (lista.length === 0) {
         responsaveisTbody.innerHTML = "<tr><td colspan='6'>Nenhum responsavel cadastrado.</td></tr>";
@@ -2485,6 +2610,10 @@
       return RESPONSAVEIS_RESUMO_FINANCEIRO.includes(nome);
     }
 
+    function ehAdmin() {
+      return String(usuarioLogado || "").trim().toUpperCase() === "INOVA";
+    }
+
     function atualizarMetricas(orcamentos) {
       const total = orcamentos.length;
       totalEl.textContent = String(total);
@@ -2730,6 +2859,17 @@
       mostrarLoginMensagem("Acesso bloqueado ate realizar login.");
     });
 
+    sessaoEncerradaOkButton.addEventListener("click", () => {
+      sessaoEncerradaAtiva = false;
+      sessaoEncerradaOverlay.hidden = true;
+      sessaoEncerradaOverlay.style.display = "none";
+      bloquearInterface();
+    });
+
+    botaoSairButton.addEventListener("click", () => {
+      sair();
+    });
+
     loginEsqueciAbrirButton.addEventListener("click", () => {
       esqueciEmail.value = loginEmail.value.trim();
       esqueciSenhaMessage.textContent = "";
@@ -2917,19 +3057,48 @@
       }
 
       if (codigoExcluir) {
-        const restante = lista.filter((orcamento) => orcamento.codigo !== codigoExcluir);
-        if (restante.length === lista.length) {
-          mostrarMensagem("Orçamento não encontrado para exclusão.", "error");
-          return;
-        }
-        try {
-          await salvarOrcamentos(restante);
-        } catch (_error) {
-          mostrarMensagem("Falha ao excluir no Neon. Alteração mantida localmente.", "error");
-        }
-        renderizarTabela();
-        mostrarMensagem("Orçamento excluído com sucesso.");
+        abrirConfirmarExclusaoOrcamento(codigoExcluir);
       }
+    });
+
+    function abrirConfirmarExclusaoOrcamento(codigo) {
+      codigoOrcamentoPendenteExclusao = codigo;
+      confirmarExclusaoTexto.textContent = `Tem certeza que deseja excluir o orçamento ${codigo}? Essa ação não pode ser desfeita.`;
+      confirmarExclusaoOverlay.hidden = false;
+      confirmarExclusaoOverlay.style.display = "flex";
+    }
+
+    function fecharConfirmarExclusaoOrcamento() {
+      codigoOrcamentoPendenteExclusao = null;
+      confirmarExclusaoOverlay.hidden = true;
+      confirmarExclusaoOverlay.style.display = "none";
+    }
+
+    confirmarExclusaoNaoButton.addEventListener("click", fecharConfirmarExclusaoOrcamento);
+
+    confirmarExclusaoSimButton.addEventListener("click", async () => {
+      const codigoExcluir = codigoOrcamentoPendenteExclusao;
+      if (!codigoExcluir) {
+        fecharConfirmarExclusaoOrcamento();
+        return;
+      }
+
+      const lista = obterOrcamentos();
+      const restante = lista.filter((orcamento) => orcamento.codigo !== codigoExcluir);
+      if (restante.length === lista.length) {
+        fecharConfirmarExclusaoOrcamento();
+        mostrarMensagem("Orçamento não encontrado para exclusão.", "error");
+        return;
+      }
+
+      try {
+        await salvarOrcamentos(restante);
+      } catch (_error) {
+        mostrarMensagem("Falha ao excluir no Neon. Alteração mantida localmente.", "error");
+      }
+      fecharConfirmarExclusaoOrcamento();
+      renderizarTabela();
+      mostrarMensagem("Orçamento excluído com sucesso.");
     });
 
     clearButton.addEventListener("click", async () => {
@@ -3049,6 +3218,18 @@
         return;
       }
 
+      if (!ehAdmin()) {
+        try {
+          await salvarMeuCadastro(dados);
+        } catch (error) {
+          mostrarMensagemResponsavel(error && error.message ? error.message : "Falha ao salvar o cadastro no Neon.", "error");
+          return;
+        }
+        mostrarMensagemResponsavel(dados.senha ? "Cadastro e senha atualizados com sucesso." : "Cadastro atualizado com sucesso.");
+        renderizarResponsaveis();
+        return;
+      }
+
       const lista = obterResponsaveis();
       const codigoEdicao = responsavelForm.codigoEdicaoResponsavel.value;
 
@@ -3129,7 +3310,11 @@
 
     clearResponsavelButton.addEventListener("click", () => {
       responsavelForm.reset();
-      prepararNovoResponsavel();
+      if (ehAdmin()) {
+        prepararNovoResponsavel();
+      } else {
+        configurarPermissaoResponsaveis();
+      }
       limparMensagemResponsavel();
     });
 
@@ -4283,7 +4468,9 @@
         alternarAba("orcamentos");
         reservarNovoNumeroOrcamento();
       } catch (_error) {
-        ativarModoLocal(usuarioLogado || "INOVA", "API indisponivel. Modo local ativado.");
+        if (!sessaoEncerradaAtiva) {
+          ativarModoLocal(usuarioLogado || "INOVA", "API indisponivel. Modo local ativado.");
+        }
       }
     }
 

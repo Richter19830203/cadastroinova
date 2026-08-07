@@ -91,6 +91,7 @@ async function ensureUsersTable(target = pool) {
     );
   `);
   await target.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email TEXT");
+  await target.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS sessao_token TEXT");
   await target.query(
     "CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_lower_idx ON usuarios (LOWER(email)) WHERE email IS NOT NULL"
   );
@@ -100,9 +101,10 @@ function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-function signAuthToken(username) {
+function signAuthToken(username, sessionId) {
   const payload = JSON.stringify({
     username,
+    sessionId,
     exp: Date.now() + 1000 * 60 * 60 * 12
   });
   const payloadBase64 = Buffer.from(payload).toString("base64url");
@@ -571,13 +573,27 @@ function ensureArray(input) {
   return Array.isArray(input) ? input : [];
 }
 
-function authenticateRequest(req, res, next) {
+async function authenticateRequest(req, res, next) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   const payload = verifyAuthToken(token);
 
   if (!payload) {
     return res.status(401).json({ error: "Nao autenticado" });
+  }
+
+  try {
+    const result = await pool.query("SELECT sessao_token FROM usuarios WHERE username = $1", [payload.username]);
+    const sessaoAtual = result.rows[0] ? result.rows[0].sessao_token : null;
+
+    if (!sessaoAtual || sessaoAtual !== payload.sessionId) {
+      return res.status(401).json({
+        error: "Sua conta foi acessada em outro computador.",
+        motivo: "sessao_substituida"
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 
   req.auth = payload;
@@ -621,7 +637,9 @@ app.post("/api/auth/login", async (req, res) => {
 
     const user = result.rows[0];
     if (user && verifyPassword(password, user.password_salt, user.password_hash)) {
-      const token = signAuthToken(user.username);
+      const sessionId = crypto.randomUUID();
+      await pool.query("UPDATE usuarios SET sessao_token = $1 WHERE username = $2", [sessionId, user.username]);
+      const token = signAuthToken(user.username, sessionId);
       return res.json({
         token,
         user: {
@@ -633,7 +651,9 @@ app.post("/api/auth/login", async (req, res) => {
 
     const fallbackPassword = username ? FALLBACK_AUTH_CREDENTIALS[username] : null;
     if (!user && fallbackPassword && fallbackPassword === password) {
-      const token = signAuthToken(username);
+      const sessionId = crypto.randomUUID();
+      await pool.query("UPDATE usuarios SET sessao_token = $1 WHERE username = $2", [sessionId, username]);
+      const token = signAuthToken(username, sessionId);
       return res.json({
         token,
         user: {
@@ -677,6 +697,15 @@ app.get("/api/auth/me", async (req, res) => {
       exp: req.auth.exp
     }
   });
+});
+
+app.post("/api/auth/logout", async (req, res) => {
+  try {
+    await pool.query("UPDATE usuarios SET sessao_token = NULL WHERE username = $1", [req.auth.username]);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.get("/api/clientes", async (_req, res) => {
@@ -755,7 +784,11 @@ app.put("/api/clientes/bulk", async (req, res) => {
   }
 });
 
-app.get("/api/responsaveis", async (_req, res) => {
+function ehAdmin(username) {
+  return String(username || "").trim().toUpperCase() === "INOVA";
+}
+
+app.get("/api/responsaveis", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -769,13 +802,29 @@ app.get("/api/responsaveis", async (_req, res) => {
       FROM responsaveis
       ORDER BY id ASC;
     `);
-    res.json(result.rows);
+
+    if (ehAdmin(req.auth.username)) {
+      return res.json(result.rows);
+    }
+
+    const proprioNome = normalizeUserName(req.auth.username);
+    const lista = result.rows.map((item) => {
+      if (normalizeUserName(item.nome) === proprioNome) {
+        return item;
+      }
+      return { id: item.id, nome: item.nome, rg: "", telefone: "", email: "" };
+    });
+    res.json(lista);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 app.put("/api/responsaveis/bulk", async (req, res) => {
+  if (!ehAdmin(req.auth.username)) {
+    return res.status(403).json({ error: "Apenas o administrador pode gerenciar todos os responsaveis." });
+  }
+
   const items = ensureArray(req.body && req.body.items);
   const client = await pool.connect();
 
@@ -901,6 +950,60 @@ app.put("/api/responsaveis/bulk", async (req, res) => {
       ok: false,
       error: error.message
     });
+  } finally {
+    client.release();
+  }
+});
+
+app.put("/api/responsaveis/me", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const nome = normalizeUserName(req.auth.username);
+    const rg = String((req.body && req.body.rg) || "").trim();
+    const telefone = String((req.body && req.body.telefone) || "").trim();
+    const email = normalizeEmail(req.body && req.body.email) || null;
+    const senha = String((req.body && req.body.senha) || "").trim();
+
+    if (senha && senha.length < 6) {
+      return res.status(400).json({ error: "A senha deve ter pelo menos 6 caracteres." });
+    }
+
+    await ensureUsersTable(client);
+    await client.query("BEGIN");
+
+    const responsavelResult = await client.query(
+      "SELECT id FROM responsaveis WHERE nome = $1",
+      [nome]
+    );
+    if (responsavelResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Responsavel nao encontrado para este login." });
+    }
+
+    await client.query(
+      "UPDATE responsaveis SET rg = $1, telefone = $2, email = $3, atualizado_em = NOW() WHERE nome = $4",
+      [rg, telefone, email, nome]
+    );
+
+    if (senha) {
+      const passwordRecord = createPasswordRecord(senha);
+      await client.query(
+        "UPDATE usuarios SET password_salt = $1, password_hash = $2, email = $3, atualizado_em = NOW() WHERE username = $4",
+        [passwordRecord.salt, passwordRecord.hash, email, nome]
+      );
+    } else {
+      await client.query(
+        "UPDATE usuarios SET email = $1, atualizado_em = NOW() WHERE username = $2",
+        [email, nome]
+      );
+    }
+
+    await client.query("COMMIT");
+    res.json({ ok: true });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: error.message });
   } finally {
     client.release();
   }

@@ -64,6 +64,34 @@
     </section>
   </div>
 
+  <div class="login-overlay" id="confirmar-exclusao-overlay" hidden style="display: none;">
+    <section class="login-card confirm-card" aria-labelledby="confirmar-exclusao-titulo">
+      <div class="confirm-icone alerta">🗑️</div>
+      <h3 id="confirmar-exclusao-titulo">Excluir orçamento?</h3>
+      <p id="confirmar-exclusao-texto">Tem certeza que deseja excluir este orçamento? Essa ação não pode ser desfeita.</p>
+      <div class="confirm-acoes">
+        <button type="button" class="btn-perigo" id="confirmar-exclusao-sim">Excluir</button>
+        <button type="button" class="btn-secondary" id="confirmar-exclusao-nao">Cancelar</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="login-overlay" id="sessao-encerrada-overlay" hidden style="display: none;">
+    <section class="login-card confirm-card" aria-labelledby="sessao-encerrada-titulo">
+      <div class="confirm-icone aviso">🔒</div>
+      <h3 id="sessao-encerrada-titulo">Sessão encerrada</h3>
+      <p>Sua conta foi acessada em outro computador. Por segurança, você foi desconectado daqui.</p>
+      <div class="confirm-acoes">
+        <button type="button" class="btn-primary" id="sessao-encerrada-ok">Entendi</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="usuario-logado-chip" id="usuario-logado-chip" hidden style="display: none;">
+    👤 Logado como <strong id="usuario-logado-nome">—</strong>
+    <button type="button" class="btn-sair" id="botao-sair">Sair</button>
+  </div>
+
   <button type="button" class="menu-sobre" id="menu-sobre-abrir">ℹ️ Sobre o Sistema</button>
 
   <div class="version-badge-wrap">
@@ -677,8 +705,9 @@
       <div id="cadastro-conteudo-responsaveis" hidden>
         <section class="card" aria-labelledby="titulo-responsavel-formulario">
           <h2 id="titulo-responsavel-formulario">Cadastro de Responsaveis</h2>
+          <p id="responsavel-formulario-sub" class="meu-cadastro-aviso" hidden>Você só pode editar os seus próprios dados.</p>
           <form id="responsavel-form" novalidate>
-            <div class="field w3">
+            <div class="field w3" id="campo-responsavel-id">
               <label for="responsavelId">ID</label>
               <input id="responsavelId" name="responsavelId" type="number" readonly>
             </div>
@@ -716,7 +745,7 @@
           <p id="mensagem-responsavel" class="message" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="card" aria-labelledby="titulo-responsaveis-listagem">
+        <section class="card" id="secao-responsaveis-listagem" aria-labelledby="titulo-responsaveis-listagem">
           <h2 id="titulo-responsaveis-listagem">Responsaveis cadastrados</h2>
           <div class="table-wrap">
             <table>
