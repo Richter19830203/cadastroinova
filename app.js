@@ -66,6 +66,23 @@
     const esqueciSenhaMessage = document.getElementById("esqueci-senha-message");
     const esqueciSenhaVoltarButton = document.getElementById("esqueci-senha-voltar");
 
+    const menuSobreAbrirButton = document.getElementById("menu-sobre-abrir");
+    const versionBadgeAbrirButton = document.getElementById("version-badge-abrir");
+    const versionBadgeTexto = document.getElementById("version-badge-texto");
+    const versionTooltipTitulo = document.getElementById("version-tooltip-titulo");
+    const versionTooltipBuild = document.getElementById("version-tooltip-build");
+    const versionTooltipAmbiente = document.getElementById("version-tooltip-ambiente");
+    const aboutOverlay = document.getElementById("about-overlay");
+    const aboutFecharButton = document.getElementById("about-fechar");
+    const aboutFecharRodapeButton = document.getElementById("about-fechar-rodape");
+    const aboutTabSobreButton = document.getElementById("about-tab-sobre");
+    const aboutTabHistoricoButton = document.getElementById("about-tab-historico");
+    const aboutPainelSobre = document.getElementById("about-painel-sobre");
+    const aboutPainelHistorico = document.getElementById("about-painel-historico");
+    const aboutCopiarVersaoButton = document.getElementById("about-copiar-versao");
+    const aboutVerificarAtualizacoesButton = document.getElementById("about-verificar-atualizacoes");
+    const aboutMensagem = document.getElementById("about-mensagem");
+
     const form = document.getElementById("orcamento-form");
     const tbody = document.getElementById("orcamentos-body");
     const message = document.getElementById("mensagem");
@@ -786,6 +803,83 @@
 
     function somenteDigitos(texto) {
       return String(texto || "").replace(/\D/g, "");
+    }
+
+    function detectarAmbiente() {
+      const localHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+      return localHost ? "Desenvolvimento" : "Produção";
+    }
+
+    function formatarDataSemFuso(dataYMD) {
+      const partes = String(dataYMD || "").split("-");
+      if (partes.length !== 3) {
+        return dataYMD || "-";
+      }
+      const [ano, mes, dia] = partes;
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function renderizarHistoricoVersao(historico) {
+      if (!Array.isArray(historico) || historico.length === 0) {
+        return "<p>Nenhum histórico disponível.</p>";
+      }
+      return historico
+        .map((item) => `
+          <div class="historico-item">
+            <span class="versao">${item.versao}</span><span class="data">${formatarDataSemFuso(item.data)}</span>
+            <ul>
+              ${(item.mudancas || []).map((mudanca) => `<li>${mudanca}</li>`).join("")}
+            </ul>
+          </div>
+        `)
+        .join("");
+    }
+
+    function inicializarVersaoSistema() {
+      const dados = window.INOVA_VERSAO;
+      if (!dados) {
+        return;
+      }
+
+      const ambiente = detectarAmbiente();
+      const ambienteDev = ambiente === "Desenvolvimento";
+      const bolinhaHtml = `<span class="bolinha-ambiente${ambienteDev ? " dev" : ""}"></span> ${ambiente}`;
+
+      versionBadgeTexto.textContent = `v${dados.versao}`;
+      versionTooltipTitulo.textContent = `${dados.empresa} · v${dados.versao}`;
+      versionTooltipBuild.textContent = `Build ${dados.build}`;
+      versionTooltipAmbiente.innerHTML = bolinhaHtml;
+
+      document.getElementById("about-empresa").textContent = dados.empresa;
+      document.getElementById("about-versao").textContent = dados.versao;
+      document.getElementById("about-build").textContent = dados.build;
+      document.getElementById("about-ambiente").innerHTML = bolinhaHtml;
+      document.getElementById("about-frontend").textContent = dados.frontend;
+      document.getElementById("about-backend").textContent = dados.backend;
+      document.getElementById("about-banco").textContent = dados.banco;
+      document.getElementById("about-desenvolvedor").textContent = dados.desenvolvedor;
+
+      aboutPainelHistorico.innerHTML = renderizarHistoricoVersao(dados.historico);
+    }
+
+    function alternarAbaSobre(aba) {
+      const ehSobre = aba === "sobre";
+      aboutTabSobreButton.classList.toggle("active", ehSobre);
+      aboutTabHistoricoButton.classList.toggle("active", !ehSobre);
+      aboutPainelSobre.hidden = !ehSobre;
+      aboutPainelHistorico.hidden = ehSobre;
+    }
+
+    function abrirModalSobre() {
+      aboutMensagem.textContent = "";
+      aboutOverlay.hidden = false;
+      aboutOverlay.style.display = "flex";
+      alternarAbaSobre("sobre");
+    }
+
+    function fecharModalSobre() {
+      aboutOverlay.hidden = true;
+      aboutOverlay.style.display = "none";
     }
 
     function somenteLetrasEspacos(texto) {
@@ -2663,6 +2757,35 @@
       esqueciSenhaMessage.style.color = "#1f6fa8";
     });
 
+    menuSobreAbrirButton.addEventListener("click", abrirModalSobre);
+    versionBadgeAbrirButton.addEventListener("click", abrirModalSobre);
+    aboutFecharButton.addEventListener("click", fecharModalSobre);
+    aboutFecharRodapeButton.addEventListener("click", fecharModalSobre);
+
+    aboutTabSobreButton.addEventListener("click", () => alternarAbaSobre("sobre"));
+    aboutTabHistoricoButton.addEventListener("click", () => alternarAbaSobre("historico"));
+
+    aboutCopiarVersaoButton.addEventListener("click", async () => {
+      const dados = window.INOVA_VERSAO;
+      if (!dados) {
+        return;
+      }
+      const texto = `Versão ${dados.versao}\nBuild ${dados.build}\n${detectarAmbiente()}`;
+      try {
+        await navigator.clipboard.writeText(texto);
+        aboutMensagem.textContent = "Copiado para a área de transferência.";
+        aboutMensagem.style.color = "#1f8f45";
+      } catch (_error) {
+        aboutMensagem.textContent = "Não foi possível copiar automaticamente.";
+        aboutMensagem.style.color = "#b42318";
+      }
+    });
+
+    aboutVerificarAtualizacoesButton.addEventListener("click", () => {
+      aboutMensagem.textContent = "Você está utilizando a versão mais recente.";
+      aboutMensagem.style.color = "#1f6fa8";
+    });
+
     form.contato.addEventListener("input", () => {
       form.contato.value = mascaraTelefoneOuEmail(form.contato.value);
     });
@@ -4168,4 +4291,5 @@
       liberarNumeroOrcamentoAtual({ beacon: true });
     });
 
+    inicializarVersaoSistema();
     initApp();

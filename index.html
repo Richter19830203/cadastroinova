@@ -64,6 +64,57 @@
     </section>
   </div>
 
+  <button type="button" class="menu-sobre" id="menu-sobre-abrir">ℹ️ Sobre o Sistema</button>
+
+  <div class="version-badge-wrap">
+    <div class="version-tooltip" id="version-tooltip">
+      <b id="version-tooltip-titulo">INOVA · v0.0.0</b>
+      <span id="version-tooltip-build">Build —</span><br>
+      <span class="ambiente-badge" id="version-tooltip-ambiente"><span class="bolinha-ambiente"></span> —</span>
+      <div class="hint">Clique para mais informações.</div>
+    </div>
+    <button type="button" class="version-badge" id="version-badge-abrir">
+      <span class="tag-icone">🏷️</span> <span id="version-badge-texto">v0.0.0</span>
+    </button>
+  </div>
+
+  <div class="login-overlay" id="about-overlay" hidden style="display: none;">
+    <section class="login-card about-card" aria-labelledby="about-titulo">
+      <div class="about-head">
+        <h3 id="about-titulo">Sobre o Sistema</h3>
+        <button type="button" class="about-fechar" id="about-fechar" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="about-tabs">
+        <button type="button" class="about-tab-btn active" id="about-tab-sobre" data-about-tab="sobre">Sobre</button>
+        <button type="button" class="about-tab-btn" id="about-tab-historico" data-about-tab="historico">Histórico</button>
+      </div>
+
+      <div id="about-painel-sobre">
+        <div class="about-grid">
+          <div><div class="item-label">Sistema</div><div class="item-valor" id="about-empresa">—</div></div>
+          <div><div class="item-label">Versão</div><div class="item-valor" id="about-versao">—</div></div>
+          <div><div class="item-label">Build</div><div class="item-valor" id="about-build">—</div></div>
+          <div><div class="item-label">Ambiente</div><div class="item-valor ambiente-badge" id="about-ambiente"><span class="bolinha-ambiente"></span> —</div></div>
+          <div><div class="item-label">Frontend</div><div class="item-valor" id="about-frontend">—</div></div>
+          <div><div class="item-label">Backend</div><div class="item-valor" id="about-backend">—</div></div>
+          <div><div class="item-label">Banco de dados</div><div class="item-valor" id="about-banco">—</div></div>
+          <div><div class="item-label">Desenvolvido por</div><div class="item-valor" id="about-desenvolvedor">—</div></div>
+        </div>
+
+        <div class="about-acoes">
+          <button type="button" class="btn-secondary" id="about-copiar-versao">📋 Copiar versão</button>
+          <button type="button" class="btn-secondary" id="about-verificar-atualizacoes">🔄 Verificar atualizações</button>
+        </div>
+        <p id="about-mensagem" class="message" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="about-painel-historico" hidden></div>
+
+      <button type="button" class="btn-primary" id="about-fechar-rodape">Fechar</button>
+    </section>
+  </div>
+
   <main class="layout">
     <header class="header">
       <div class="logo">
@@ -1418,6 +1469,7 @@
     </div>
   </main>
 
+  <script src="version.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1503,6 +1503,219 @@
       }
     }
 
+    /* ===== Sistema de versionamento (badge + menu + modal Sobre) ===== */
+    .menu-sobre {
+      position: fixed;
+      top: 12px;
+      right: 14px;
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--brand-strong);
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(31, 87, 130, 0.16);
+    }
+
+    .version-badge-wrap {
+      position: fixed;
+      bottom: 14px;
+      right: 14px;
+      z-index: 9998;
+      display: grid;
+      justify-items: end;
+      gap: 8px;
+    }
+
+    .version-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(19, 40, 59, 0.88);
+      color: #fff;
+      border: 0;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+      transition: transform 140ms ease, background 140ms ease;
+    }
+
+    .version-badge:hover {
+      transform: translateY(-2px);
+      background: rgba(19, 40, 59, 0.97);
+    }
+
+    .version-tooltip {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: 0 14px 34px rgba(31, 87, 130, 0.18);
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      color: var(--ink);
+      min-width: 200px;
+      line-height: 1.5;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .version-badge-wrap:hover .version-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .version-tooltip .hint {
+      color: var(--muted);
+      font-size: 0.72rem;
+      margin-top: 4px;
+    }
+
+    .ambiente-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 700;
+    }
+
+    .bolinha-ambiente {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #1f8f45;
+      display: inline-block;
+    }
+
+    .bolinha-ambiente.dev {
+      background: var(--brand);
+    }
+
+    .about-card {
+      width: min(100%, 460px);
+      max-height: 90vh;
+      overflow: auto;
+    }
+
+    .about-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .about-head h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .about-fechar {
+      border: 0;
+      background: none;
+      font-size: 1.2rem;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0;
+    }
+
+    .about-tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 2px;
+    }
+
+    .about-tab-btn {
+      border: 0;
+      background: none;
+      padding: 8px 14px;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.86rem;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .about-tab-btn.active {
+      color: var(--brand-strong);
+      border-bottom-color: var(--brand);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 16px;
+      font-size: 0.86rem;
+      margin: 14px 0;
+    }
+
+    .about-grid .item-label {
+      color: var(--muted);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+    }
+
+    .about-grid .item-valor {
+      font-weight: 700;
+    }
+
+    .about-acoes {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .historico-item {
+      border-left: 3px solid var(--brand);
+      padding: 2px 0 2px 12px;
+      margin-bottom: 14px;
+    }
+
+    .historico-item .versao {
+      font-weight: 800;
+      color: var(--brand-strong);
+      font-size: 0.92rem;
+    }
+
+    .historico-item .data {
+      color: var(--muted);
+      font-size: 0.72rem;
+      margin-left: 6px;
+    }
+
+    .historico-item ul {
+      margin: 6px 0 0;
+      padding-left: 16px;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 640px) {
+      .about-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .menu-sobre span {
+        display: none;
+      }
+    }
+
     @media (max-width: 768px) {
       .table-wrap {
         border: 0;
