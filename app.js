@@ -195,6 +195,8 @@
     let codigoOrcamentoPendenteExclusao = null;
     let sessaoEncerradaAtiva = false;
     let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
+    let sessaoPollingId = null;
+    const SESSAO_POLLING_INTERVALO_MS = 15000;
 
     // "Lembrar-me": promove uma sessao lembrada no localStorage para a
     // sessao desta aba, caso ainda nao exista uma sessao ativa nela.
@@ -489,6 +491,7 @@
     }
 
     async function sair() {
+      pararPollingSessao();
       try {
         await apiRequest("/auth/logout", { method: "POST" });
       } catch (_error) {
@@ -506,7 +509,30 @@
       mostrarLoginMensagem("Você saiu do sistema.", "ok");
     }
 
+    function iniciarPollingSessao() {
+      pararPollingSessao();
+      sessaoPollingId = setInterval(verificarSessaoAtiva, SESSAO_POLLING_INTERVALO_MS);
+    }
+
+    function pararPollingSessao() {
+      if (sessaoPollingId) {
+        clearInterval(sessaoPollingId);
+        sessaoPollingId = null;
+      }
+    }
+
+    function verificarSessaoAtiva() {
+      if (!authToken || sessaoEncerradaAtiva) {
+        return;
+      }
+      apiRequest("/auth/me").catch(() => {
+        // erro de rede/API indisponivel: apiRequest ja trata o caso de
+        // sessao substituida (401 + motivo sessao_substituida) sozinho
+      });
+    }
+
     function tratarSessaoEncerrada() {
+      pararPollingSessao();
       if (!sessaoEncerradaOverlay.hidden) {
         return;
       }
@@ -529,6 +555,7 @@
       sessaoEncerradaAtiva = false;
       authToken = token;
       usuarioLogado = nomeUsuario;
+      iniciarPollingSessao();
       sessionStorage.setItem(AUTH_TOKEN_KEY, token);
       sessionStorage.setItem(AUTH_USER_KEY, nomeUsuario);
       sessionStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
@@ -573,6 +600,7 @@
     }
 
     function ativarModoLocal(nomeUsuario, mensagem) {
+      pararPollingSessao();
       authToken = "";
       apiDisponivel = false;
       usuarioLogado = nomeUsuario;
@@ -4467,6 +4495,7 @@
         liberarInterface();
         alternarAba("orcamentos");
         reservarNovoNumeroOrcamento();
+        iniciarPollingSessao();
       } catch (_error) {
         if (!sessaoEncerradaAtiva) {
           ativarModoLocal(usuarioLogado || "INOVA", "API indisponivel. Modo local ativado.");
@@ -4476,6 +4505,12 @@
 
     window.addEventListener("pagehide", () => {
       liberarNumeroOrcamentoAtual({ beacon: true });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        verificarSessaoAtiva();
+      }
     });
 
     inicializarVersaoSistema();
