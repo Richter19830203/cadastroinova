@@ -3,7 +3,7 @@
 // array historico (mesmo conteudo do CHANGELOG.md, em formato de dados).
 window.INOVA_VERSAO = {
   versao: "1.0.0",
-  build: "20260807-1",
+  build: "07/08/2026-1",
   dataBuild: "2026-08-07",
   desenvolvedor: "Felipe Richter Brólio",
   empresa: "INOVA Transportes e Mudanças",
