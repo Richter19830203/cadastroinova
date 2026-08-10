@@ -1741,6 +1741,73 @@ app.post("/api/distancia", async (req, res) => {
   }
 });
 
+function coordenadaValida(ponto) {
+  return (
+    ponto &&
+    Number.isFinite(Number(ponto.lat)) &&
+    Number.isFinite(Number(ponto.lon)) &&
+    Math.abs(Number(ponto.lat)) <= 90 &&
+    Math.abs(Number(ponto.lon)) <= 180
+  );
+}
+
+async function calcularRotaComGeometria(origem, destino) {
+  const resposta = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
+    method: "POST",
+    headers: {
+      Authorization: process.env.ORS_API_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      coordinates: [
+        [origem.lon, origem.lat],
+        [destino.lon, destino.lat]
+      ]
+    })
+  });
+
+  if (!resposta.ok) {
+    throw new Error(`Falha ao calcular a rota (OpenRouteService respondeu ${resposta.status})`);
+  }
+
+  const dados = await resposta.json();
+  const feature = dados.features && dados.features[0];
+  const metros = feature && feature.properties && feature.properties.summary ? feature.properties.summary.distance : null;
+  const coordenadas = feature && feature.geometry ? feature.geometry.coordinates : null;
+
+  if (metros == null || !coordenadas) {
+    throw new Error("Resposta da OpenRouteService sem distancia ou geometria.");
+  }
+
+  return {
+    distanciaKm: Math.round((metros / 1000) * 100) / 100,
+    geometria: coordenadas.map(([lon, lat]) => [lat, lon])
+  };
+}
+
+app.post("/api/rota/distancia", async (req, res) => {
+  try {
+    const origem = req.body && req.body.origem;
+    const destino = req.body && req.body.destino;
+
+    if (!coordenadaValida(origem) || !coordenadaValida(destino)) {
+      return res.status(400).json({ error: "Informe origem e destino com latitude e longitude validas." });
+    }
+
+    if (!process.env.ORS_API_KEY) {
+      return res.status(503).json({ error: "Calculo automatico de distancia ainda nao configurado (chave da OpenRouteService pendente)." });
+    }
+
+    const resultado = await calcularRotaComGeometria(
+      { lat: Number(origem.lat), lon: Number(origem.lon) },
+      { lat: Number(destino.lat), lon: Number(destino.lon) }
+    );
+    res.json(resultado);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/orcamentos", async (_req, res) => {
   try {
     const result = await pool.query(`

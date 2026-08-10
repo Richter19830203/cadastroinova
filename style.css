@@ -254,6 +254,24 @@
       font-weight: 700;
     }
 
+    .beta-link {
+      margin-left: auto;
+      align-self: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--brand-strong);
+      text-decoration: none;
+      border: 1px solid var(--brand-strong);
+      border-radius: 999px;
+      padding: 6px 14px;
+      white-space: nowrap;
+    }
+
+    .beta-link:hover {
+      background: var(--brand-strong);
+      color: #fff;
+    }
+
     form {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
