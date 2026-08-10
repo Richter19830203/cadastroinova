@@ -253,11 +253,6 @@
           <input id="origemUF" name="origemUF" list="lista-estados-br" required maxlength="2" placeholder="UF">
         </div>
 
-        <div class="field w3">
-          <label for="cepOrigem">CEP Origem</label>
-          <input id="cepOrigem" name="cepOrigem" maxlength="9" placeholder="00000-000">
-        </div>
-
         <div class="field w4">
           <label for="destino">Destino</label>
           <input id="destino" name="destino" required maxlength="80" placeholder="Cidade de entrega">
@@ -268,15 +263,15 @@
           <input id="destinoUF" name="destinoUF" list="lista-estados-br" required maxlength="2" placeholder="UF">
         </div>
 
-        <div class="field w3">
-          <label for="cepDestino">CEP Destino</label>
-          <input id="cepDestino" name="cepDestino" maxlength="9" placeholder="00000-000">
+        <div class="field w4">
+          <label for="distancia">Distância (km)</label>
+          <input id="distancia" name="distancia" type="number" min="0" step="0.01" placeholder="Preencha manualmente ou calcule no mapa">
+          <small id="distancia-status" class="distancia-status"></small>
         </div>
 
-        <div class="field w3">
-          <label for="distancia">Distância (km)</label>
-          <input id="distancia" name="distancia" type="number" min="0" step="0.01" placeholder="Preenchida automaticamente">
-          <small id="distancia-status" class="distancia-status"></small>
+        <div class="field w4">
+          <label style="visibility:hidden;">Calcular rota</label>
+          <a class="beta-link" style="text-align:center;" href="/novo-orcamento/?secao=calculo-rotas" target="_blank" rel="noopener">🗺️ Calcular no mapa</a>
         </div>
 
         <div class="field w8">

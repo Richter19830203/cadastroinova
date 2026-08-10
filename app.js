@@ -2703,8 +2703,6 @@
       form.origemUF.value = (item.origemUF || extrairUF(item.origem) || "").toUpperCase();
       form.destino.value = item.destino || "";
       form.destinoUF.value = (item.destinoUF || extrairUF(item.destino) || "").toUpperCase();
-      form.cepOrigem.value = item.cepOrigem || "";
-      form.cepDestino.value = item.cepDestino || "";
       form.distancia.value = item.distancia || "";
       limparStatusDistancia();
       renderizarItensProdutoFormulario(itensProduto);
@@ -2752,8 +2750,6 @@
         origemUF,
         destino,
         destinoUF,
-        cepOrigem: form.cepOrigem.value.trim(),
-        cepDestino: form.cepDestino.value.trim(),
         distancia: form.distancia.value,
         quantidade: primeiroItem.quantidade,
         descricao: primeiroItem.descricao,
@@ -2777,42 +2773,6 @@
     function limparStatusDistancia() {
       distanciaStatus.textContent = "";
       distanciaStatus.className = "distancia-status";
-    }
-
-    function mostrarStatusDistancia(texto, tipo) {
-      distanciaStatus.textContent = texto;
-      distanciaStatus.className = tipo ? `distancia-status ${tipo}` : "distancia-status";
-    }
-
-    async function tentarCalcularDistanciaAutomatica() {
-      const cepOrigem = somenteDigitos(form.cepOrigem.value);
-      const cepDestino = somenteDigitos(form.cepDestino.value);
-
-      if (cepOrigem.length !== 8 || cepDestino.length !== 8) {
-        return;
-      }
-
-      mostrarStatusDistancia("Calculando distância...", "");
-
-      try {
-        const resposta = await apiRequest("/distancia", {
-          method: "POST",
-          body: JSON.stringify({ cepOrigem, cepDestino })
-        });
-        form.distancia.value = resposta.distanciaKm;
-        mostrarStatusDistancia("Calculado automaticamente pelos CEPs.", "ok");
-      } catch (error) {
-        let textoErro = "Nao foi possivel calcular a distancia automaticamente.";
-        try {
-          const corpo = JSON.parse((error && error.message) || "{}");
-          if (corpo && corpo.error) {
-            textoErro = corpo.error;
-          }
-        } catch (_erroParse) {
-          // mantem a mensagem padrao
-        }
-        mostrarStatusDistancia(`${textoErro} Preencha manualmente se preferir.`, "erro");
-      }
     }
 
     function criarCampoOcultoEdicao() {
@@ -2957,17 +2917,6 @@
     form.contato.addEventListener("input", () => {
       form.contato.value = mascaraTelefoneOuEmail(form.contato.value);
     });
-
-    form.cepOrigem.addEventListener("input", () => {
-      form.cepOrigem.value = somenteDigitos(form.cepOrigem.value).slice(0, 8);
-    });
-
-    form.cepDestino.addEventListener("input", () => {
-      form.cepDestino.value = somenteDigitos(form.cepDestino.value).slice(0, 8);
-    });
-
-    form.cepOrigem.addEventListener("blur", tentarCalcularDistanciaAutomatica);
-    form.cepDestino.addEventListener("blur", tentarCalcularDistanciaAutomatica);
 
     clienteForm.clienteNome.addEventListener("input", () => {
       clienteForm.clienteNome.value = somenteLetrasEspacos(clienteForm.clienteNome.value);
