@@ -3,46 +3,23 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
-import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import AltRouteOutlinedIcon from "@mui/icons-material/AltRouteOutlined";
-import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
-import DirectionsCarOutlinedIcon from "@mui/icons-material/DirectionsCarOutlined";
-import Person4OutlinedIcon from "@mui/icons-material/Person4Outlined";
 import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import AppRegistrationOutlinedIcon from "@mui/icons-material/AppRegistrationOutlined";
-import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
-import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 const SIDEBAR_WIDTH = 240;
 
-const ITENS_PRINCIPAL = [
-  { chave: "dashboard", rotulo: "Dashboard", Icone: DashboardOutlinedIcon },
-  { chave: "orcamentos", rotulo: "Orçamentos", Icone: AltRouteOutlinedIcon },
-  { chave: "fretes", rotulo: "Fretes", Icone: LocalShippingOutlinedIcon },
-  { chave: "viagens", rotulo: "Viagens", Icone: MapOutlinedIcon },
-  { chave: "clientes", rotulo: "Clientes", Icone: PeopleOutlinedIcon },
-  { chave: "veiculos", rotulo: "Veículos", Icone: DirectionsCarOutlinedIcon },
-  { chave: "motoristas", rotulo: "Motoristas", Icone: Person4OutlinedIcon },
+const ITENS_MENU = [
+  { chave: "orcamentos", rotulo: "Orçamentos", Icone: DescriptionOutlinedIcon },
+  { chave: "calculo-rotas", rotulo: "Cálculo de Rotas", Icone: AltRouteOutlinedIcon },
+  { chave: "cadastro", rotulo: "Cadastro", Icone: AppRegistrationOutlinedIcon, temSubmenu: true },
   { chave: "financeiro", rotulo: "Financeiro", Icone: PaidOutlinedIcon },
-  { chave: "relatorios", rotulo: "Relatórios", Icone: BarChartOutlinedIcon }
+  { chave: "graficos", rotulo: "Gráficos", Icone: BarChartOutlinedIcon }
 ];
-
-const ITENS_CONFIGURACOES = [
-  { chave: "cadastros", rotulo: "Cadastros", Icone: AppRegistrationOutlinedIcon, temSubmenu: true },
-  { chave: "tabelas", rotulo: "Tabelas", Icone: TableChartOutlinedIcon },
-  { chave: "usuarios", rotulo: "Usuários", Icone: GroupOutlinedIcon },
-  { chave: "configuracoes", rotulo: "Configurações", Icone: SettingsOutlinedIcon },
-  { chave: "ajuda", rotulo: "Ajuda", Icone: HelpOutlineOutlinedIcon }
-];
-
-const ITENS_MENU = [...ITENS_PRINCIPAL, ...ITENS_CONFIGURACOES];
 
 function ItemMenu({ chave, rotulo, Icone, temSubmenu, ativo, aoSelecionar }) {
   return (
@@ -142,16 +119,9 @@ export default function Sidebar({ aberta, secaoAtiva, aoSelecionarSecao }) {
         </Stack>
 
         <Box sx={{ px: 1.5 }}>
-          <RotuloSecao texto="PRINCIPAL" />
+          <RotuloSecao texto="MENU" />
           <Stack spacing={0.5}>
-            {ITENS_PRINCIPAL.map((item) => (
-              <ItemMenu key={item.chave} {...item} ativo={item.chave === secaoAtiva} aoSelecionar={aoSelecionarSecao} />
-            ))}
-          </Stack>
-
-          <RotuloSecao texto="CONFIGURAÇÕES" />
-          <Stack spacing={0.5}>
-            {ITENS_CONFIGURACOES.map((item) => (
+            {ITENS_MENU.map((item) => (
               <ItemMenu key={item.chave} {...item} ativo={item.chave === secaoAtiva} aoSelecionar={aoSelecionarSecao} />
             ))}
           </Stack>

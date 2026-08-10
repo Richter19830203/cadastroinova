@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { CORES } from "../theme";
 
-export default function PlaceholderSection({ rotulo, Icone }) {
+export default function PlaceholderSection({ rotulo, Icone, texto }) {
   return (
     <Box
       sx={{
@@ -39,7 +39,7 @@ export default function PlaceholderSection({ rotulo, Icone }) {
       </Typography>
 
       <Typography sx={{ fontSize: 13.5, color: CORES.textoSecundario, maxWidth: 360, lineHeight: 1.5 }}>
-        Esta área ainda não foi construída — só a tela de Orçamentos existe até agora. Em breve essa seção ganha conteúdo de verdade.
+        {texto || "Esta seção já existe no sistema atual e ainda não foi portada pro layout novo."}
       </Typography>
 
       <Box
@@ -56,7 +56,7 @@ export default function PlaceholderSection({ rotulo, Icone }) {
           py: 0.5
         }}
       >
-        Em breve
+        Ainda no sistema atual
       </Box>
     </Box>
   );

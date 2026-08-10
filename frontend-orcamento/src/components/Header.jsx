@@ -9,8 +9,7 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import FullscreenOutlinedIcon from "@mui/icons-material/FullscreenOutlined";
 
 export default function Header({ aoAlternarSidebar, secaoAtiva }) {
-  const { chave, rotulo, Icone } = secaoAtiva;
-  const ehOrcamentos = chave === "orcamentos";
+  const { rotulo, Icone } = secaoAtiva;
   const alternarTelaCheia = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen?.();
@@ -41,15 +40,7 @@ export default function Header({ aoAlternarSidebar, secaoAtiva }) {
 
         <Stack direction="row" alignItems="center" spacing={0.75}>
           <Icone sx={{ fontSize: 18, color: "#2563EB" }} />
-          {ehOrcamentos ? (
-            <>
-              <Typography sx={{ color: "#2563EB", fontWeight: 600, fontSize: 14 }}>Orçamentos</Typography>
-              <Typography sx={{ color: "#9CA3AF", fontSize: 14 }}>/</Typography>
-              <Typography sx={{ color: "#111827", fontWeight: 700, fontSize: 14 }}>Novo Orçamento</Typography>
-            </>
-          ) : (
-            <Typography sx={{ color: "#111827", fontWeight: 700, fontSize: 14 }}>{rotulo}</Typography>
-          )}
+          <Typography sx={{ color: "#111827", fontWeight: 700, fontSize: 14 }}>{rotulo}</Typography>
         </Stack>
       </Stack>
 
