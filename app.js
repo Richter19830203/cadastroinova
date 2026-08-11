@@ -572,7 +572,7 @@
       });
       const resposta = await fetch(`https://nominatim.openstreetmap.org/search?${parametros.toString()}`);
       if (!resposta.ok) {
-        return [];
+        throw new Error(`Busca de cidade falhou (HTTP ${resposta.status})`);
       }
       const dados = await resposta.json();
       return dados.map(formatarSugestaoCidade);
@@ -598,12 +598,13 @@
       container.hidden = false;
     }
 
-    function configurarCampoRota(input, limparBtn, sugestoesEl, aoSelecionar) {
+    function configurarCampoRota(input, limparBtn, sugestoesEl, nomeCampo, aoSelecionar) {
       let timeoutId = null;
 
       input.addEventListener("input", () => {
         aoSelecionar(null);
         limparBtn.hidden = !input.value;
+        mostrarMensagemRota("");
         const consulta = input.value;
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -619,10 +620,12 @@
               input.value = item.rotulo;
               sugestoesEl.hidden = true;
               limparBtn.hidden = false;
+              mostrarMensagemRota(`${nomeCampo} selecionada: ${item.rotulo}`, "ok");
               aoSelecionar(item);
             });
           } catch (_erro) {
             sugestoesEl.hidden = true;
+            mostrarMensagemRota("Não foi possível buscar essa cidade agora. Verifique sua conexão e tente novamente.");
           }
         }, 400);
       });
@@ -631,6 +634,7 @@
         input.value = "";
         limparBtn.hidden = true;
         sugestoesEl.hidden = true;
+        mostrarMensagemRota("");
         aoSelecionar(null);
       });
 
@@ -646,17 +650,16 @@
       rotaGeometriaCalculada = null;
       rotaDistanciaValorEl.textContent = "—";
       rotaCopiarButton.disabled = true;
-      mostrarMensagemRota("");
       atualizarMapaRota();
     }
 
-    configurarCampoRota(rotaOrigemInput, rotaOrigemLimpar, rotaOrigemSugestoes, (item) => {
+    configurarCampoRota(rotaOrigemInput, rotaOrigemLimpar, rotaOrigemSugestoes, "Origem", (item) => {
       rotaOrigemSelecionada = item;
       rotaAtualizarBotaoCalcular();
       limparResultadoRota();
     });
 
-    configurarCampoRota(rotaDestinoInput, rotaDestinoLimpar, rotaDestinoSugestoes, (item) => {
+    configurarCampoRota(rotaDestinoInput, rotaDestinoLimpar, rotaDestinoSugestoes, "Destino", (item) => {
       rotaDestinoSelecionada = item;
       rotaAtualizarBotaoCalcular();
       limparResultadoRota();
@@ -674,6 +677,7 @@
       rotaOrigemLimpar.hidden = !rotaOrigemInput.value;
       rotaDestinoLimpar.hidden = !rotaDestinoInput.value;
 
+      mostrarMensagemRota("");
       rotaAtualizarBotaoCalcular();
       limparResultadoRota();
     });
