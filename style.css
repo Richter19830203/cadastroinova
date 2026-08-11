@@ -445,6 +445,185 @@
       margin-top: 2px;
     }
 
+    /* ===== Calculo de Rotas ===== */
+
+    .rota-grid {
+      display: grid;
+      grid-template-columns: 32% 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .rota-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .rota-col-esquerda {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .rota-campo {
+      position: relative;
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .rota-campo label {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .rota-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+
+    .rota-pin {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .rota-pin.origem { background: var(--ok); }
+    .rota-pin.destino { background: var(--danger); }
+
+    .rota-input input {
+      border: 0;
+      padding: 0;
+      flex-grow: 1;
+      font: inherit;
+      color: var(--ink);
+    }
+
+    .rota-input input:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    .rota-limpar {
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .rota-sugestoes {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      z-index: 20;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .rota-sugestao-item {
+      padding: 9px 12px;
+      font-size: 0.86rem;
+      cursor: pointer;
+    }
+
+    .rota-sugestao-item:hover,
+    .rota-sugestao-item.ativa {
+      background: #edf6ff;
+    }
+
+    .rota-sugestao-vazia {
+      padding: 9px 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .rota-inverter {
+      width: 100%;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .rota-calcular {
+      width: 100%;
+      height: 48px;
+      font-size: 0.9rem;
+      letter-spacing: 0.02em;
+    }
+
+    .rota-calcular:disabled,
+    .rota-copiar:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .rota-mensagem {
+      margin: 10px 0 0;
+      font-size: 0.82rem;
+      min-height: 1.1em;
+      color: var(--danger);
+    }
+
+    .rota-mensagem.ok {
+      color: var(--ok);
+    }
+
+    .rota-resumo-linha {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+
+    .rota-resumo-linha strong {
+      font-size: 1.1rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rota-copiar {
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    .rota-mapa-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .rota-mapa-frame {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-grow: 1;
+      min-height: 460px;
+      background: #E9EEDD;
+    }
+
+    .rota-mapa-frame.leaflet-container {
+      font-family: inherit;
+    }
+
+    .rota-pin-mapa {
+      background: transparent;
+      border: none;
+    }
+
     button {
       border: 0;
       border-radius: 10px;
@@ -1375,6 +1554,7 @@
       .hero,
       .tabs,
       #painel-clientes,
+      #painel-calculo-rotas,
       #painel-cadastro,
       #painel-financeiro,
       #painel-graficos,

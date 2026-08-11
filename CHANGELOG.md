@@ -6,6 +6,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e o versionamento segue [Semantic Versioning](https://semver.org/lang/pt-BR/)
 (MAJOR.MINOR.PATCH).
 
+## [1.3.0] - 2026-08-11
+
+- Menu lateral fixo (sidebar) substitui a barra de abas horizontais no topo
+- Nova aba "Cálculo de Rotas": busca de cidade, mapa (OpenStreetMap/Leaflet) e botão para copiar a distância calculada direto pro formulário de Orçamento
+- Removidos os campos CEP Origem/CEP Destino do formulário de Orçamento (cálculo de distância passou a ser feito pela aba Cálculo de Rotas)
+- Logo da INOVA deixou de aparecer no topo de todas as abas, mantido só na Proposta Comercial
+- Corrigido: chip "Logado como", botão "Sobre o Sistema" e badge de versão não aparecem mais na impressão da proposta comercial
+
 ## [1.0.0] - 2026-08-07
 
 Primeira versão formalmente versionada. Resumo das capacidades já

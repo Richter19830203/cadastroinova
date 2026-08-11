@@ -39,10 +39,12 @@
     const MODO_LOCAL_ARQUIVO = window.location.protocol === "file:";
 
     const tabOrcamentos = document.getElementById("tab-orcamentos");
+    const tabCalculoRotas = document.getElementById("tab-calculo-rotas");
     const tabCadastro = document.getElementById("tab-cadastro");
     const tabFinanceiro = document.getElementById("tab-financeiro");
     const tabGraficos = document.getElementById("tab-graficos");
     const painelOrcamentos = document.getElementById("painel-orcamentos");
+    const painelCalculoRotas = document.getElementById("painel-calculo-rotas");
     const painelCadastro = document.getElementById("painel-cadastro");
     const painelFinanceiro = document.getElementById("painel-financeiro");
     const painelGraficos = document.getElementById("painel-graficos");
@@ -403,22 +405,325 @@
 
     function alternarAba(aba) {
       const mostrarOrcamentos = aba === "orcamentos";
+      const mostrarCalculoRotas = aba === "calculo-rotas";
       const mostrarCadastro = aba === "cadastro";
       const mostrarFinanceiro = aba === "financeiro";
       const mostrarGraficos = aba === "graficos";
       painelOrcamentos.classList.toggle("active", mostrarOrcamentos);
+      painelCalculoRotas.classList.toggle("active", mostrarCalculoRotas);
       painelCadastro.classList.toggle("active", mostrarCadastro);
       painelFinanceiro.classList.toggle("active", mostrarFinanceiro);
       painelGraficos.classList.toggle("active", mostrarGraficos);
       tabOrcamentos.classList.toggle("active", mostrarOrcamentos);
+      tabCalculoRotas.classList.toggle("active", mostrarCalculoRotas);
       tabCadastro.classList.toggle("active", mostrarCadastro);
       tabFinanceiro.classList.toggle("active", mostrarFinanceiro);
       tabGraficos.classList.toggle("active", mostrarGraficos);
       tabOrcamentos.setAttribute("aria-selected", String(mostrarOrcamentos));
+      tabCalculoRotas.setAttribute("aria-selected", String(mostrarCalculoRotas));
       tabCadastro.setAttribute("aria-selected", String(mostrarCadastro));
       tabFinanceiro.setAttribute("aria-selected", String(mostrarFinanceiro));
       tabGraficos.setAttribute("aria-selected", String(mostrarGraficos));
+
+      if (mostrarCalculoRotas) {
+        inicializarMapaRota();
+      }
     }
+
+    // ===== Calculo de Rotas =====
+
+    const rotaOrigemInput = document.getElementById("rota-origem-input");
+    const rotaDestinoInput = document.getElementById("rota-destino-input");
+    const rotaOrigemLimpar = document.getElementById("rota-origem-limpar");
+    const rotaDestinoLimpar = document.getElementById("rota-destino-limpar");
+    const rotaOrigemSugestoes = document.getElementById("rota-origem-sugestoes");
+    const rotaDestinoSugestoes = document.getElementById("rota-destino-sugestoes");
+    const rotaInverterButton = document.getElementById("rota-inverter");
+    const rotaCalcularButton = document.getElementById("rota-calcular");
+    const rotaMensagemEl = document.getElementById("rota-mensagem");
+    const rotaDistanciaValorEl = document.getElementById("rota-distancia-valor");
+    const rotaCopiarButton = document.getElementById("rota-copiar-distancia");
+    const rotaMapaEl = document.getElementById("rota-mapa");
+
+    let rotaOrigemSelecionada = null;
+    let rotaDestinoSelecionada = null;
+    let rotaDistanciaCalculada = null;
+    let rotaGeometriaCalculada = null;
+    let mapaRota = null;
+    let mapaRotaMarcadorOrigem = null;
+    let mapaRotaMarcadorDestino = null;
+    let mapaRotaLinha = null;
+
+    function rotaAtualizarBotaoCalcular() {
+      rotaCalcularButton.disabled = !(rotaOrigemSelecionada && rotaDestinoSelecionada);
+    }
+
+    function mostrarMensagemRota(texto, tipo) {
+      rotaMensagemEl.textContent = texto || "";
+      rotaMensagemEl.className = tipo === "ok" ? "rota-mensagem ok" : "rota-mensagem";
+    }
+
+    function criarIconeRotaPin(cor) {
+      return L.divIcon({
+        className: "rota-pin-mapa",
+        html: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 27 15 27s15-16.5 15-27C30 6.7 23.3 0 15 0z" fill="${cor}"/>
+          <circle cx="15" cy="15" r="6" fill="#FFFFFF"/>
+        </svg>`,
+        iconSize: [30, 42],
+        iconAnchor: [15, 42]
+      });
+    }
+
+    function inicializarMapaRota() {
+      if (!rotaMapaEl || typeof L === "undefined") {
+        return;
+      }
+      if (mapaRota) {
+        setTimeout(() => mapaRota.invalidateSize(), 50);
+        return;
+      }
+      mapaRota = L.map(rotaMapaEl).setView([-14.235, -51.9253], 4);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(mapaRota);
+      setTimeout(() => mapaRota.invalidateSize(), 50);
+      atualizarMapaRota();
+    }
+
+    function atualizarMapaRota() {
+      if (!mapaRota) {
+        return;
+      }
+      if (mapaRotaMarcadorOrigem) {
+        mapaRota.removeLayer(mapaRotaMarcadorOrigem);
+        mapaRotaMarcadorOrigem = null;
+      }
+      if (mapaRotaMarcadorDestino) {
+        mapaRota.removeLayer(mapaRotaMarcadorDestino);
+        mapaRotaMarcadorDestino = null;
+      }
+      if (mapaRotaLinha) {
+        mapaRota.removeLayer(mapaRotaLinha);
+        mapaRotaLinha = null;
+      }
+
+      if (rotaOrigemSelecionada) {
+        mapaRotaMarcadorOrigem = L.marker([rotaOrigemSelecionada.lat, rotaOrigemSelecionada.lon], {
+          icon: criarIconeRotaPin("#1f8f45")
+        }).addTo(mapaRota);
+      }
+      if (rotaDestinoSelecionada) {
+        mapaRotaMarcadorDestino = L.marker([rotaDestinoSelecionada.lat, rotaDestinoSelecionada.lon], {
+          icon: criarIconeRotaPin("#bc2f1b")
+        }).addTo(mapaRota);
+      }
+
+      if (rotaGeometriaCalculada && rotaGeometriaCalculada.length > 0) {
+        mapaRotaLinha = L.polyline(rotaGeometriaCalculada, { color: "#2f8acb", weight: 4 }).addTo(mapaRota);
+        mapaRota.fitBounds(rotaGeometriaCalculada, { padding: [40, 40] });
+      } else if (rotaOrigemSelecionada && rotaDestinoSelecionada) {
+        mapaRota.fitBounds(
+          [
+            [rotaOrigemSelecionada.lat, rotaOrigemSelecionada.lon],
+            [rotaDestinoSelecionada.lat, rotaDestinoSelecionada.lon]
+          ],
+          { padding: [60, 60] }
+        );
+      } else if (rotaOrigemSelecionada) {
+        mapaRota.setView([rotaOrigemSelecionada.lat, rotaOrigemSelecionada.lon], 11);
+      } else if (rotaDestinoSelecionada) {
+        mapaRota.setView([rotaDestinoSelecionada.lat, rotaDestinoSelecionada.lon], 11);
+      }
+    }
+
+    function extrairUFEnderecoRota(endereco) {
+      if (endereco.state_code) {
+        return endereco.state_code;
+      }
+      const iso = endereco["ISO3166-2-lvl4"];
+      if (iso && iso.includes("-")) {
+        return iso.split("-")[1];
+      }
+      return endereco.state || "";
+    }
+
+    function formatarSugestaoCidade(item) {
+      const endereco = item.address || {};
+      const cidade = endereco.city || endereco.town || endereco.village || endereco.municipality || item.name;
+      const estado = extrairUFEnderecoRota(endereco);
+      const pais = endereco.country || "";
+      const partes = [cidade, estado].filter(Boolean).join(" - ");
+      const rotulo = [partes, pais].filter(Boolean).join(", ") || item.display_name;
+      return { rotulo, lat: Number(item.lat), lon: Number(item.lon) };
+    }
+
+    async function buscarCidadesRota(consulta) {
+      if (!consulta || consulta.trim().length < 3) {
+        return [];
+      }
+      const parametros = new URLSearchParams({
+        q: consulta,
+        format: "jsonv2",
+        addressdetails: 1,
+        featureType: "city",
+        "accept-language": "pt-BR",
+        limit: 6
+      });
+      const resposta = await fetch(`https://nominatim.openstreetmap.org/search?${parametros.toString()}`);
+      if (!resposta.ok) {
+        return [];
+      }
+      const dados = await resposta.json();
+      return dados.map(formatarSugestaoCidade);
+    }
+
+    function renderizarSugestoesRota(container, itens, aoSelecionar) {
+      container.innerHTML = "";
+      if (!itens.length) {
+        const vazio = document.createElement("div");
+        vazio.className = "rota-sugestao-vazia";
+        vazio.textContent = "Nenhuma cidade encontrada.";
+        container.appendChild(vazio);
+        container.hidden = false;
+        return;
+      }
+      itens.forEach((item) => {
+        const linha = document.createElement("div");
+        linha.className = "rota-sugestao-item";
+        linha.textContent = item.rotulo;
+        linha.addEventListener("click", () => aoSelecionar(item));
+        container.appendChild(linha);
+      });
+      container.hidden = false;
+    }
+
+    function configurarCampoRota(input, limparBtn, sugestoesEl, aoSelecionar) {
+      let timeoutId = null;
+
+      input.addEventListener("input", () => {
+        aoSelecionar(null);
+        limparBtn.hidden = !input.value;
+        const consulta = input.value;
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        if (!consulta || consulta.trim().length < 3) {
+          sugestoesEl.hidden = true;
+          return;
+        }
+        timeoutId = setTimeout(async () => {
+          try {
+            const itens = await buscarCidadesRota(consulta);
+            renderizarSugestoesRota(sugestoesEl, itens, (item) => {
+              input.value = item.rotulo;
+              sugestoesEl.hidden = true;
+              limparBtn.hidden = false;
+              aoSelecionar(item);
+            });
+          } catch (_erro) {
+            sugestoesEl.hidden = true;
+          }
+        }, 400);
+      });
+
+      limparBtn.addEventListener("click", () => {
+        input.value = "";
+        limparBtn.hidden = true;
+        sugestoesEl.hidden = true;
+        aoSelecionar(null);
+      });
+
+      document.addEventListener("click", (evento) => {
+        if (evento.target !== input && !sugestoesEl.contains(evento.target)) {
+          sugestoesEl.hidden = true;
+        }
+      });
+    }
+
+    function limparResultadoRota() {
+      rotaDistanciaCalculada = null;
+      rotaGeometriaCalculada = null;
+      rotaDistanciaValorEl.textContent = "—";
+      rotaCopiarButton.disabled = true;
+      mostrarMensagemRota("");
+      atualizarMapaRota();
+    }
+
+    configurarCampoRota(rotaOrigemInput, rotaOrigemLimpar, rotaOrigemSugestoes, (item) => {
+      rotaOrigemSelecionada = item;
+      rotaAtualizarBotaoCalcular();
+      limparResultadoRota();
+    });
+
+    configurarCampoRota(rotaDestinoInput, rotaDestinoLimpar, rotaDestinoSugestoes, (item) => {
+      rotaDestinoSelecionada = item;
+      rotaAtualizarBotaoCalcular();
+      limparResultadoRota();
+    });
+
+    rotaInverterButton.addEventListener("click", () => {
+      const origemAnterior = rotaOrigemSelecionada;
+      const textoOrigemAnterior = rotaOrigemInput.value;
+
+      rotaOrigemSelecionada = rotaDestinoSelecionada;
+      rotaOrigemInput.value = rotaDestinoInput.value;
+      rotaDestinoSelecionada = origemAnterior;
+      rotaDestinoInput.value = textoOrigemAnterior;
+
+      rotaOrigemLimpar.hidden = !rotaOrigemInput.value;
+      rotaDestinoLimpar.hidden = !rotaDestinoInput.value;
+
+      rotaAtualizarBotaoCalcular();
+      limparResultadoRota();
+    });
+
+    rotaCalcularButton.addEventListener("click", async () => {
+      if (!rotaOrigemSelecionada || !rotaDestinoSelecionada) {
+        return;
+      }
+      rotaCalcularButton.disabled = true;
+      rotaCalcularButton.textContent = "Calculando...";
+      mostrarMensagemRota("");
+      try {
+        const resultado = await apiRequest("/rota/distancia", {
+          method: "POST",
+          body: JSON.stringify({
+            origem: { lat: rotaOrigemSelecionada.lat, lon: rotaOrigemSelecionada.lon },
+            destino: { lat: rotaDestinoSelecionada.lat, lon: rotaDestinoSelecionada.lon }
+          })
+        });
+        rotaDistanciaCalculada = resultado.distanciaKm;
+        rotaGeometriaCalculada = resultado.geometria || null;
+        rotaDistanciaValorEl.textContent = `${String(rotaDistanciaCalculada.toFixed(2)).replace(".", ",")} km`;
+        rotaCopiarButton.disabled = false;
+        atualizarMapaRota();
+      } catch (erro) {
+        let mensagem = "Nao foi possivel calcular a rota agora.";
+        try {
+          const corpo = JSON.parse(erro && erro.message);
+          if (corpo && corpo.error) {
+            mensagem = corpo.error;
+          }
+        } catch (_erroParse) {
+          // corpo nao era JSON, mantem mensagem padrao
+        }
+        mostrarMensagemRota(mensagem);
+      } finally {
+        rotaCalcularButton.disabled = !(rotaOrigemSelecionada && rotaDestinoSelecionada);
+        rotaCalcularButton.textContent = "Calcular rota";
+      }
+    });
+
+    rotaCopiarButton.addEventListener("click", () => {
+      if (rotaDistanciaCalculada == null) {
+        return;
+      }
+      form.distancia.value = rotaDistanciaCalculada.toFixed(2);
+      distanciaStatus.textContent = "Distância copiada da aba Cálculo de Rotas.";
+      distanciaStatus.className = "distancia-status ok";
+      mostrarMensagemRota("Distância copiada para o formulário de Orçamento.", "ok");
+    });
 
     function alternarModuloFinanceiro(modulo) {
       const atual = ["lancamento-despesas", "categorias-despesas", "formas-pagamento", "centros-custo"].includes(modulo)
@@ -2784,6 +3089,7 @@
     }
 
     tabOrcamentos.addEventListener("click", () => alternarAba("orcamentos"));
+    tabCalculoRotas.addEventListener("click", () => alternarAba("calculo-rotas"));
     tabCadastro.addEventListener("click", () => {
       alternarModuloCadastro(cadastroTipoSeletor.value);
     });
