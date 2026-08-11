@@ -27,64 +27,108 @@
         radial-gradient(circle at 50% 92%, rgba(183, 224, 249, 0.3), transparent 35%),
         linear-gradient(145deg, var(--bg-1), var(--bg-2));
       min-height: 100vh;
-      padding: 28px 16px 36px;
       animation: fade-in 650ms ease;
     }
 
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar-app {
+      width: 240px;
+      flex-shrink: 0;
+      min-height: 100vh;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      background: #0B1220;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-logo-mini {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 22px 20px;
+    }
+
+    .sidebar-logo-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: #2563EB;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo-text b {
+      display: block;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .sidebar-logo-text span {
+      display: block;
+      color: #64748B;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+    }
+
     .layout {
-      max-width: 1080px;
-      margin: 0 auto;
+      flex-grow: 1;
+      min-width: 0;
       display: grid;
       gap: 18px;
-    }
-
-    .header {
-      display: block;
-      min-height: auto;
-      padding: 0;
-      background: transparent;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-      overflow: hidden;
-    }
-
-    .logo {
-      width: 100%;
-      min-height: auto;
-      background: transparent;
-      border: 0;
-      display: block;
-      padding: 0;
-    }
-
-    .logo img {
-      width: 100%;
-      height: auto;
-      display: block;
+      padding: 28px 32px 36px;
     }
 
     .tabs {
       display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 4px;
+      padding: 0 12px;
     }
 
     .tab-btn {
-      border: 1px solid var(--line);
-      background: #edf6ff;
-      color: #26455f;
-      border-radius: 999px;
-      padding: 9px 14px;
-      font-size: 0.88rem;
-      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      text-align: left;
+      border: 0;
+      background: transparent;
+      color: #94A3B8;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+
+    .tab-btn svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+
+    .tab-btn:hover:not(.active) {
+      background: rgba(148, 163, 184, 0.1);
+      color: #E2E8F0;
     }
 
     .tab-btn.active {
-      background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+      background: #2563EB;
       color: #fff;
-      border-color: transparent;
     }
 
     .tab-panel {
@@ -252,24 +296,6 @@
       font-family: "IBM Plex Mono", monospace;
       font-size: 1rem;
       font-weight: 700;
-    }
-
-    .beta-link {
-      margin-left: auto;
-      align-self: center;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--brand-strong);
-      text-decoration: none;
-      border: 1px solid var(--brand-strong);
-      border-radius: 999px;
-      padding: 6px 14px;
-      white-space: nowrap;
-    }
-
-    .beta-link:hover {
-      background: var(--brand-strong);
-      color: #fff;
     }
 
     form {
@@ -729,7 +755,7 @@
       flex-wrap: wrap;
     }
 
-    .app-locked .layout {
+    .app-locked .app-shell {
       filter: blur(3px);
       pointer-events: none;
       user-select: none;
@@ -1341,7 +1367,7 @@
         display: none !important;
       }
 
-      .header,
+      .sidebar-app,
       .hero,
       .tabs,
       #painel-clientes,
@@ -1479,15 +1505,6 @@
         border-radius: 12px;
       }
 
-      .header {
-        border-radius: 12px;
-      }
-
-      .logo {
-        width: 100%;
-        min-height: auto;
-      }
-
       .actions,
       .filtro-acoes {
         flex-direction: column;
@@ -1509,15 +1526,6 @@
 
       .proposal-sign {
         grid-template-columns: 1fr;
-      }
-
-      .tabs {
-        display: grid;
-        grid-template-columns: 1fr;
-      }
-
-      .tab-btn {
-        width: 100%;
       }
     }
 
