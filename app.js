@@ -129,6 +129,8 @@
     const usuarioLogadoChip = document.getElementById("usuario-logado-chip");
     const usuarioLogadoNomeEl = document.getElementById("usuario-logado-nome");
     const botaoSairButton = document.getElementById("botao-sair");
+    const sidebarToggleMobileButton = document.getElementById("sidebar-toggle-mobile");
+    const sidebarBackdrop = document.getElementById("sidebar-backdrop");
 
     const motoristaForm = document.getElementById("motorista-form");
     const motoristaMessage = document.getElementById("mensagem-motorista");
@@ -3166,6 +3168,25 @@
 
     botaoSairButton.addEventListener("click", () => {
       sair();
+    });
+
+    function fecharSidebarMobile() {
+      document.body.classList.remove("sidebar-mobile-aberta");
+      sidebarToggleMobileButton.setAttribute("aria-expanded", "false");
+    }
+
+    sidebarToggleMobileButton.addEventListener("click", () => {
+      const abrindo = !document.body.classList.contains("sidebar-mobile-aberta");
+      document.body.classList.toggle("sidebar-mobile-aberta", abrindo);
+      sidebarToggleMobileButton.setAttribute("aria-expanded", String(abrindo));
+    });
+
+    sidebarBackdrop.addEventListener("click", fecharSidebarMobile);
+
+    document.querySelector(".tabs").addEventListener("click", (evento) => {
+      if (evento.target.closest(".tab-btn")) {
+        fecharSidebarMobile();
+      }
     });
 
     loginEsqueciAbrirButton.addEventListener("click", () => {
