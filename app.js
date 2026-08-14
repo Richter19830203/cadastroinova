@@ -3202,7 +3202,7 @@
       esqueciSenhaOverlay.style.display = "none";
     });
 
-    esqueciSenhaForm.addEventListener("submit", (event) => {
+    esqueciSenhaForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const emailInformado = esqueciEmail.value.trim();
 
@@ -3212,8 +3212,24 @@
         return;
       }
 
-      esqueciSenhaMessage.textContent = "Envio de e-mail ainda nao configurado. Peca pra INOVA redefinir sua senha manualmente na aba Cadastro.";
+      esqueciSenhaMessage.textContent = "Enviando...";
       esqueciSenhaMessage.style.color = "#1f6fa8";
+
+      try {
+        await apiRequest("/auth/esqueci-senha", {
+          method: "POST",
+          skipAuth: true,
+          body: JSON.stringify({ email: emailInformado })
+        });
+        esqueciSenhaMessage.textContent = "Se esse e-mail estiver cadastrado, o administrador foi avisado e vai entrar em contato pra redefinir sua senha.";
+        esqueciSenhaMessage.style.color = "#1f8f45";
+      } catch (error) {
+        const textoErro = String(error && error.message ? error.message : "");
+        esqueciSenhaMessage.textContent = textoErro.includes("pendente")
+          ? "Envio de e-mail ainda nao configurado. Peca pra INOVA redefinir sua senha manualmente na aba Cadastro."
+          : "Nao foi possivel enviar o aviso agora. Peca pra INOVA redefinir sua senha manualmente na aba Cadastro.";
+        esqueciSenhaMessage.style.color = "#b42318";
+      }
     });
 
     menuSobreAbrirButton.addEventListener("click", abrirModalSobre);

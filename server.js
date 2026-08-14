@@ -671,6 +671,59 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+const RESET_NOTIFICATION_EMAIL = process.env.RESET_NOTIFICATION_EMAIL || "inovatransportadora149@gmail.com";
+
+async function enviarAvisoEsqueciSenha(emailSolicitante) {
+  const resposta = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from: "INOVA Sistema <onboarding@resend.dev>",
+      to: [RESET_NOTIFICATION_EMAIL],
+      subject: "Pedido de redefinicao de senha - Sistema INOVA",
+      html: `
+        <p>Alguem pediu redefinicao de senha no sistema da INOVA.</p>
+        <p><strong>E-mail informado:</strong> ${emailSolicitante}</p>
+        <p><strong>Data/hora:</strong> ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p>
+        <p>Para redefinir, acesse a aba Cadastro do sistema e atualize a senha desse responsavel.</p>
+      `
+    })
+  });
+
+  if (!resposta.ok) {
+    const corpo = await resposta.text();
+    throw new Error(`Falha ao enviar e-mail via Resend (HTTP ${resposta.status}): ${corpo}`);
+  }
+}
+
+// Rota publica - nao revela se o e-mail existe ou nao no cadastro, so avisa o admin quando existir.
+app.post("/api/auth/esqueci-senha", async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body && req.body.email);
+
+    if (!email) {
+      return res.status(400).json({ error: "Informe o e-mail cadastrado." });
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(503).json({ error: "Envio de e-mail ainda nao configurado (chave do Resend pendente)." });
+    }
+
+    const result = await pool.query("SELECT username FROM usuarios WHERE LOWER(email) = $1", [email]);
+
+    if (result.rows[0]) {
+      await enviarAvisoEsqueciSenha(email);
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Rota publica de liberacao de numero reservado - sem autenticacao para permitir
 // o uso de navigator.sendBeacon() no fechamento da aba/navegador (nao aceita headers customizados).
 app.post("/api/orcamentos/numero/:numero/liberar", async (req, res) => {
