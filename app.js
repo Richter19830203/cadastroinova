@@ -4303,7 +4303,8 @@
       if (ehGlobal) {
         el.querySelector(".btn-aplicar-global").addEventListener("click", () => {
           Object.keys(grafPeriodos).forEach((k) => {
-            grafPeriodos[k] = { ano: grafPeriodoGlobal.ano, mes: grafPeriodoGlobal.mes };
+            grafPeriodos[k].ano = grafPeriodoGlobal.ano;
+            grafPeriodos[k].mes = grafPeriodoGlobal.mes;
           });
           grafSincronizarControles();
           grafRenderTudo();
