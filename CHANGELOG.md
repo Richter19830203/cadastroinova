@@ -6,6 +6,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e o versionamento segue [Semantic Versioning](https://semver.org/lang/pt-BR/)
 (MAJOR.MINOR.PATCH).
 
+## [1.5.0] - 2026-08-14
+
+- Sino de alertas 🔔 (só pro admin): avisa sobre pedidos de redefinição de senha pendentes e quando sai uma nova versão do sistema — clique pra ver o que mudou
+- Importados 171 orçamentos históricos (Nº 3181 a 3529) para a base de dados
+
 ## [1.4.0] - 2026-08-12
 
 - Logo real da INOVA na sidebar, espaçamento do topo ajustado e aviso visível na busca de cidade do Cálculo de Rotas

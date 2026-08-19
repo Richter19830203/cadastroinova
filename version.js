@@ -2,15 +2,23 @@
 // Atualizar este arquivo a cada mudanca: versao, build, dataBuild e o
 // array historico (mesmo conteudo do CHANGELOG.md, em formato de dados).
 window.INOVA_VERSAO = {
-  versao: "1.4.0",
-  build: "12/08/2026-1",
-  dataBuild: "2026-08-12",
+  versao: "1.5.0",
+  build: "14/08/2026-1",
+  dataBuild: "2026-08-14",
   desenvolvedor: "Felipe Richter Brólio",
   empresa: "INOVA Transportes e Mudanças",
   frontend: "Netlify",
   backend: "Node.js / Express",
   banco: "Neon PostgreSQL",
   historico: [
+    {
+      versao: "1.5.0",
+      data: "2026-08-14",
+      mudancas: [
+        "Sino de alertas 🔔 (só pro admin): avisa sobre pedidos de redefinição de senha pendentes e quando sai uma nova versão do sistema — clique pra ver o que mudou",
+        "Importados 171 orçamentos históricos (Nº 3181 a 3529) para a base de dados"
+      ]
+    },
     {
       versao: "1.4.0",
       data: "2026-08-12",
