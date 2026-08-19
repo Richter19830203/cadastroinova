@@ -96,7 +96,20 @@
   <button type="button" class="sidebar-toggle-mobile" id="sidebar-toggle-mobile" aria-label="Abrir menu" aria-expanded="false">☰</button>
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
-  <button type="button" class="menu-sobre" id="menu-sobre-abrir">ℹ️ Sobre o Sistema</button>
+  <div class="topo-direita-fixo">
+    <div class="sino-alertas-wrap" id="sino-alertas-wrap" hidden style="display: none;">
+      <button type="button" class="btn-sino" id="sino-alertas-abrir" aria-label="Alertas">
+        🔔
+        <span class="badge-sino" id="sino-alertas-badge" hidden>0</span>
+      </button>
+      <div class="painel-alertas" id="painel-alertas" hidden>
+        <div class="painel-alertas-head">Alertas</div>
+        <div id="painel-alertas-lista"></div>
+      </div>
+    </div>
+
+    <button type="button" class="menu-sobre" id="menu-sobre-abrir">ℹ️ Sobre o Sistema</button>
+  </div>
 
   <div class="version-badge-wrap">
     <div class="version-tooltip" id="version-tooltip">

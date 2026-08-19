@@ -6,6 +6,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e o versionamento segue [Semantic Versioning](https://semver.org/lang/pt-BR/)
 (MAJOR.MINOR.PATCH).
 
+## [1.4.0] - 2026-08-12
+
+- Logo real da INOVA na sidebar, espaçamento do topo ajustado e aviso visível na busca de cidade do Cálculo de Rotas
+- Sidebar recolhível no celular: menu vira uma gaveta com botão próprio em telas estreitas
+- "Esqueci minha senha" agora avisa o administrador por e-mail (via Resend) em vez de só mostrar um aviso fixo
+- Corrigido: ajustar o período de um gráfico individual depois de usar "Aplicar em todos os gráficos" não tinha efeito
+
 ## [1.3.0] - 2026-08-11
 
 - Menu lateral fixo (sidebar) substitui a barra de abas horizontais no topo

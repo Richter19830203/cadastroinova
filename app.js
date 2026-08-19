@@ -69,6 +69,11 @@
     const esqueciSenhaVoltarButton = document.getElementById("esqueci-senha-voltar");
 
     const menuSobreAbrirButton = document.getElementById("menu-sobre-abrir");
+    const sinoAlertasWrap = document.getElementById("sino-alertas-wrap");
+    const sinoAlertasAbrirButton = document.getElementById("sino-alertas-abrir");
+    const sinoAlertasBadge = document.getElementById("sino-alertas-badge");
+    const painelAlertas = document.getElementById("painel-alertas");
+    const painelAlertasLista = document.getElementById("painel-alertas-lista");
     const versionBadgeAbrirButton = document.getElementById("version-badge-abrir");
     const versionBadgeTexto = document.getElementById("version-badge-texto");
     const versionTooltipTitulo = document.getElementById("version-tooltip-titulo");
@@ -775,6 +780,9 @@
       loginSenha.value = "";
       loginSenha.focus();
       ocultarChipUsuario();
+      sinoAlertasWrap.hidden = true;
+      sinoAlertasWrap.style.display = "none";
+      painelAlertas.hidden = true;
     }
 
     function liberarInterface() {
@@ -897,6 +905,7 @@
         atualizarSelectTipoServicoOrcamento();
         popularTodosDropdownsLookup();
         reservarNovoNumeroOrcamento();
+        atualizarSinoAlertas();
       }).catch(() => {
         ativarModoLocal(nomeUsuario, "API indisponivel. Acesso local liberado.");
       });
@@ -1291,6 +1300,118 @@
     function fecharModalSobre() {
       aboutOverlay.hidden = true;
       aboutOverlay.style.display = "none";
+    }
+
+    // ===== Sino de alertas (nova versao + pedidos de redefinicao de senha) =====
+
+    const VERSAO_VISTA_KEY = "inova_versao_vista";
+    let sinoVersaoNova = false;
+    let sinoPendentesSenha = [];
+
+    function sinoTempoRelativo(dataIso) {
+      const data = new Date(dataIso);
+      if (Number.isNaN(data.getTime())) {
+        return "";
+      }
+      const minutos = Math.max(0, Math.round((Date.now() - data.getTime()) / 60000));
+      if (minutos < 1) return "agora mesmo";
+      if (minutos < 60) return `há ${minutos} minuto${minutos === 1 ? "" : "s"}`;
+      const horas = Math.round(minutos / 60);
+      if (horas < 24) return `há ${horas} hora${horas === 1 ? "" : "s"}`;
+      const dias = Math.round(horas / 24);
+      return `há ${dias} dia${dias === 1 ? "" : "s"}`;
+    }
+
+    function renderizarPainelAlertas() {
+      const itens = [];
+
+      if (sinoVersaoNova && window.INOVA_VERSAO) {
+        itens.push(`
+          <div class="alerta-item">
+            <div class="alerta-icone">🆕</div>
+            <div class="alerta-texto">
+              <p class="alerta-titulo">Nova versão: v${window.INOVA_VERSAO.versao}</p>
+              <p class="alerta-sub">Confira o que mudou na última atualização.</p>
+              <button type="button" class="alerta-link" id="sino-ver-versao">Ver o que mudou →</button>
+            </div>
+          </div>
+        `);
+      }
+
+      sinoPendentesSenha.forEach((item) => {
+        itens.push(`
+          <div class="alerta-item">
+            <div class="alerta-icone">🔑</div>
+            <div class="alerta-texto">
+              <p class="alerta-titulo">Pedido de redefinição de senha</p>
+              <p class="alerta-sub">${item.email} — ${sinoTempoRelativo(item.criadoEm)}</p>
+            </div>
+          </div>
+        `);
+      });
+
+      painelAlertasLista.innerHTML = itens.length > 0
+        ? itens.join("")
+        : '<div class="painel-alertas-vazio">Nenhum alerta no momento.</div>';
+
+      const verVersaoButton = document.getElementById("sino-ver-versao");
+      if (verVersaoButton) {
+        verVersaoButton.addEventListener("click", () => {
+          painelAlertas.hidden = true;
+          abrirModalSobre();
+          alternarAbaSobre("historico");
+        });
+      }
+    }
+
+    async function atualizarSinoAlertas() {
+      if (!ehAdmin() || !authToken) {
+        sinoAlertasWrap.hidden = true;
+        sinoAlertasWrap.style.display = "none";
+        return;
+      }
+
+      sinoAlertasWrap.hidden = false;
+      sinoAlertasWrap.style.display = "block";
+
+      sinoVersaoNova = Boolean(
+        window.INOVA_VERSAO && window.INOVA_VERSAO.versao !== localStorage.getItem(VERSAO_VISTA_KEY)
+      );
+
+      try {
+        sinoPendentesSenha = await apiRequest("/auth/esqueci-senha/pendentes");
+      } catch (_erro) {
+        sinoPendentesSenha = [];
+      }
+
+      const total = sinoPendentesSenha.length + (sinoVersaoNova ? 1 : 0);
+      sinoAlertasBadge.textContent = String(total);
+      sinoAlertasBadge.hidden = total === 0;
+    }
+
+    async function alternarPainelAlertas() {
+      const vaiAbrir = painelAlertas.hidden;
+      if (!vaiAbrir) {
+        painelAlertas.hidden = true;
+        return;
+      }
+
+      await atualizarSinoAlertas();
+      renderizarPainelAlertas();
+      painelAlertas.hidden = false;
+
+      if (sinoVersaoNova && window.INOVA_VERSAO) {
+        localStorage.setItem(VERSAO_VISTA_KEY, window.INOVA_VERSAO.versao);
+      }
+      if (sinoPendentesSenha.length > 0) {
+        try {
+          await apiRequest("/auth/esqueci-senha/marcar-lidas", { method: "POST" });
+        } catch (_erro) {
+          // se falhar, os pedidos continuam pendentes e aparecem de novo na proxima abertura
+        }
+      }
+
+      sinoAlertasBadge.hidden = true;
     }
 
     function somenteLetrasEspacos(texto) {
@@ -3233,6 +3354,17 @@
     });
 
     menuSobreAbrirButton.addEventListener("click", abrirModalSobre);
+
+    sinoAlertasAbrirButton.addEventListener("click", (evento) => {
+      evento.stopPropagation();
+      alternarPainelAlertas();
+    });
+
+    document.addEventListener("click", (evento) => {
+      if (!painelAlertas.hidden && !sinoAlertasWrap.contains(evento.target)) {
+        painelAlertas.hidden = true;
+      }
+    });
     versionBadgeAbrirButton.addEventListener("click", abrirModalSobre);
     aboutFecharButton.addEventListener("click", fecharModalSobre);
     aboutFecharRodapeButton.addEventListener("click", fecharModalSobre);
@@ -4793,6 +4925,7 @@
         alternarAba("orcamentos");
         reservarNovoNumeroOrcamento();
         iniciarPollingSessao();
+        atualizarSinoAlertas();
       } catch (_error) {
         if (!sessaoEncerradaAtiva) {
           ativarModoLocal(usuarioLogado || "INOVA", "API indisponivel. Modo local ativado.");

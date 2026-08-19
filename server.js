@@ -440,6 +440,15 @@ async function initSchema() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS solicitacoes_senha (
+      id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      email TEXT NOT NULL,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      lida BOOLEAN NOT NULL DEFAULT FALSE
+    );
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS responsaveis (
       id INTEGER PRIMARY KEY,
       nome TEXT NOT NULL UNIQUE,
@@ -715,6 +724,7 @@ app.post("/api/auth/esqueci-senha", async (req, res) => {
     const result = await pool.query("SELECT username FROM usuarios WHERE LOWER(email) = $1", [email]);
 
     if (result.rows[0]) {
+      await pool.query("INSERT INTO solicitacoes_senha (email) VALUES ($1)", [email]);
       await enviarAvisoEsqueciSenha(email);
     }
 
@@ -755,6 +765,35 @@ app.get("/api/auth/me", async (req, res) => {
 app.post("/api/auth/logout", async (req, res) => {
   try {
     await pool.query("UPDATE usuarios SET sessao_token = NULL WHERE username = $1", [req.auth.username]);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Sino de alertas - so o admin ve os pedidos de redefinicao de senha pendentes.
+app.get("/api/auth/esqueci-senha/pendentes", async (req, res) => {
+  try {
+    if (!ehAdmin(req.auth.username)) {
+      return res.status(403).json({ error: "Apenas o administrador pode ver os pedidos de redefinicao de senha." });
+    }
+
+    const result = await pool.query(
+      "SELECT id, email, criado_em AS \"criadoEm\" FROM solicitacoes_senha WHERE lida = FALSE ORDER BY criado_em DESC"
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/auth/esqueci-senha/marcar-lidas", async (req, res) => {
+  try {
+    if (!ehAdmin(req.auth.username)) {
+      return res.status(403).json({ error: "Apenas o administrador pode gerenciar os pedidos de redefinicao de senha." });
+    }
+
+    await pool.query("UPDATE solicitacoes_senha SET lida = TRUE WHERE lida = FALSE");
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });

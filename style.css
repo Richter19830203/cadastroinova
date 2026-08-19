@@ -1562,6 +1562,11 @@
         padding: 0;
       }
 
+      .app-shell {
+        display: block;
+        min-height: 0;
+      }
+
       .layout {
         display: block;
         max-width: none;
@@ -1574,7 +1579,7 @@
 
       .sidebar-app,
       .usuario-logado-chip,
-      .menu-sobre,
+      .topo-direita-fixo,
       .version-badge-wrap,
       .hero,
       .tabs,
@@ -1644,7 +1649,7 @@
 
       body.imprimindo-grafico .btn-pdf,
       body.imprimindo-grafico .btn-aplicar-global,
-      body.imprimindo-grafico .graf-card-global.pdf-alvo .graf-controles button,
+      body.imprimindo-grafico .graf-controles,
       body.imprimindo-grafico .graf-card summary {
         display: none !important;
       }
@@ -1839,11 +1844,17 @@
     }
 
     /* ===== Sistema de versionamento (badge + menu + modal Sobre) ===== */
-    .menu-sobre {
+    .topo-direita-fixo {
       position: fixed;
       top: 12px;
       right: 14px;
       z-index: 9998;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .menu-sobre {
       display: flex;
       align-items: center;
       gap: 5px;
@@ -1857,6 +1868,125 @@
       color: var(--brand-strong);
       cursor: pointer;
       box-shadow: 0 6px 16px rgba(31, 87, 130, 0.16);
+    }
+
+    .sino-alertas-wrap {
+      position: relative;
+    }
+
+    .btn-sino {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(31, 87, 130, 0.16);
+    }
+
+    .badge-sino {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+      border: 2px solid #fff;
+    }
+
+    .painel-alertas {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 320px;
+      max-width: calc(100vw - 28px);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 18px 40px rgba(31, 87, 130, 0.22);
+      overflow: hidden;
+      z-index: 9998;
+    }
+
+    .painel-alertas-head {
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 800;
+      font-size: 0.86rem;
+    }
+
+    .alerta-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .alerta-item:last-child {
+      border-bottom: 0;
+    }
+
+    .alerta-icone {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      background: #eef6ff;
+    }
+
+    .alerta-texto {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .alerta-titulo {
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin: 0 0 2px;
+    }
+
+    .alerta-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin: 0;
+      word-break: break-word;
+    }
+
+    .alerta-link {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--brand-strong);
+      background: none;
+      border: 0;
+      padding: 0;
+      margin-top: 4px;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .painel-alertas-vazio {
+      padding: 22px 14px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
     }
 
     .version-badge-wrap {

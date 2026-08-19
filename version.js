@@ -2,15 +2,25 @@
 // Atualizar este arquivo a cada mudanca: versao, build, dataBuild e o
 // array historico (mesmo conteudo do CHANGELOG.md, em formato de dados).
 window.INOVA_VERSAO = {
-  versao: "1.3.0",
-  build: "11/08/2026-1",
-  dataBuild: "2026-08-11",
+  versao: "1.4.0",
+  build: "12/08/2026-1",
+  dataBuild: "2026-08-12",
   desenvolvedor: "Felipe Richter Brólio",
   empresa: "INOVA Transportes e Mudanças",
   frontend: "Netlify",
   backend: "Node.js / Express",
   banco: "Neon PostgreSQL",
   historico: [
+    {
+      versao: "1.4.0",
+      data: "2026-08-12",
+      mudancas: [
+        "Logo real da INOVA na sidebar, espaçamento do topo ajustado e aviso visível na busca de cidade do Cálculo de Rotas",
+        "Sidebar recolhível no celular: menu vira uma gaveta com botão próprio em telas estreitas",
+        "\"Esqueci minha senha\" agora avisa o administrador por e-mail (via Resend) em vez de só mostrar um aviso fixo",
+        "Corrigido: ajustar o período de um gráfico individual depois de usar \"Aplicar em todos os gráficos\" não tinha efeito"
+      ]
+    },
     {
       versao: "1.3.0",
       data: "2026-08-11",
