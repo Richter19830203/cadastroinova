@@ -92,6 +92,8 @@ async function ensureUsersTable(target = pool) {
   `);
   await target.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email TEXT");
   await target.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS sessao_token TEXT");
+  await target.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS ultimo_login_em TIMESTAMPTZ");
+  await target.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS ultima_atividade_em TIMESTAMPTZ");
   await target.query(
     "CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_lower_idx ON usuarios (LOWER(email)) WHERE email IS NOT NULL"
   );
@@ -416,6 +418,9 @@ async function initSchema() {
     );
   `);
 
+  await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS nota_desmontagem TEXT NOT NULL DEFAULT 'nao'");
+  await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS nota_embalagem TEXT NOT NULL DEFAULT 'nao'");
+  await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS nota_mao_obra TEXT NOT NULL DEFAULT 'nao'");
   await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS a_c TEXT");
   await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS origem_uf TEXT");
   await pool.query("ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS destino_uf TEXT");
@@ -592,7 +597,10 @@ async function authenticateRequest(req, res, next) {
   }
 
   try {
-    const result = await pool.query("SELECT sessao_token FROM usuarios WHERE username = $1", [payload.username]);
+    const result = await pool.query(
+      "UPDATE usuarios SET ultima_atividade_em = NOW() WHERE username = $1 RETURNING sessao_token",
+      [payload.username]
+    );
     const sessaoAtual = result.rows[0] ? result.rows[0].sessao_token : null;
 
     if (!sessaoAtual || sessaoAtual !== payload.sessionId) {
@@ -647,7 +655,10 @@ app.post("/api/auth/login", async (req, res) => {
     const user = result.rows[0];
     if (user && verifyPassword(password, user.password_salt, user.password_hash)) {
       const sessionId = crypto.randomUUID();
-      await pool.query("UPDATE usuarios SET sessao_token = $1 WHERE username = $2", [sessionId, user.username]);
+      await pool.query(
+        "UPDATE usuarios SET sessao_token = $1, ultimo_login_em = NOW(), ultima_atividade_em = NOW() WHERE username = $2",
+        [sessionId, user.username]
+      );
       const token = signAuthToken(user.username, sessionId);
       return res.json({
         token,
@@ -661,7 +672,10 @@ app.post("/api/auth/login", async (req, res) => {
     const fallbackPassword = username ? FALLBACK_AUTH_CREDENTIALS[username] : null;
     if (!user && fallbackPassword && fallbackPassword === password) {
       const sessionId = crypto.randomUUID();
-      await pool.query("UPDATE usuarios SET sessao_token = $1 WHERE username = $2", [sessionId, username]);
+      await pool.query(
+        "UPDATE usuarios SET sessao_token = $1, ultimo_login_em = NOW(), ultima_atividade_em = NOW() WHERE username = $2",
+        [sessionId, username]
+      );
       const token = signAuthToken(username, sessionId);
       return res.json({
         token,
@@ -884,15 +898,18 @@ app.get("/api/responsaveis", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        id,
-        nome,
-        COALESCE(rg, '') AS rg,
-        COALESCE(telefone, '') AS telefone,
-        COALESCE(email, '') AS email,
-        criado_em AS "criadoEm",
-        atualizado_em AS "atualizadoEm"
-      FROM responsaveis
-      ORDER BY id ASC;
+        r.id,
+        r.nome,
+        COALESCE(r.rg, '') AS rg,
+        COALESCE(r.telefone, '') AS telefone,
+        COALESCE(r.email, '') AS email,
+        r.criado_em AS "criadoEm",
+        r.atualizado_em AS "atualizadoEm",
+        u.sessao_token IS NOT NULL AS logado,
+        u.ultima_atividade_em AS "ultimaAtividadeEm"
+      FROM responsaveis r
+      LEFT JOIN usuarios u ON u.username = UPPER(TRIM(r.nome))
+      ORDER BY r.id ASC;
     `);
 
     if (ehAdmin(req.auth.username)) {
@@ -1933,7 +1950,10 @@ app.get("/api/orcamentos", async (_req, res) => {
         status_orcamento AS "statusOrcamento",
         status_entrega AS "statusEntrega",
         responsavel,
-        observacoes
+        observacoes,
+        nota_desmontagem AS "notaDesmontagem",
+        nota_embalagem AS "notaEmbalagem",
+        nota_mao_obra AS "notaMaoObra"
       FROM orcamentos
       ORDER BY criado_em DESC;
     `);
@@ -1947,7 +1967,8 @@ const ORCAMENTOS_BULK_COLUNAS = [
   "codigo", "numero", "criado_em", "atualizado_em", "cliente", "a_c", "contato", "origem", "origem_uf",
   "destino", "destino_uf", "cep_origem", "cep_destino", "distancia", "itens_produto", "quantidade", "descricao",
   "tipo_veiculo", "tipo_servico_id", "tipo_servico_descricao", "tipo_carga", "peso", "volume", "prazo", "valor",
-  "validade", "status_orcamento", "status_entrega", "responsavel", "observacoes"
+  "validade", "status_orcamento", "status_entrega", "responsavel", "observacoes",
+  "nota_desmontagem", "nota_embalagem", "nota_mao_obra"
 ];
 const ORCAMENTOS_BULK_LOTE = 200;
 
@@ -1982,7 +2003,10 @@ function orcamentoParaValores(item) {
     item.statusOrcamento,
     item.statusEntrega,
     item.responsavel || null,
-    item.observacoes || null
+    item.observacoes || null,
+    item.notaDesmontagem || "nao",
+    item.notaEmbalagem || "nao",
+    item.notaMaoObra || "nao"
   ];
 }
 

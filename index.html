@@ -436,6 +436,32 @@
           </select>
         </div>
 
+        <div class="field w4">
+          <label for="notaDesmontagem">Desmontagem de móveis</label>
+          <select id="notaDesmontagem" name="notaDesmontagem">
+            <option value="nao">Não incluído</option>
+            <option value="sim">Incluído</option>
+          </select>
+        </div>
+
+        <div class="field w4">
+          <label for="notaEmbalagem">Fornecimento de embalagem</label>
+          <select id="notaEmbalagem" name="notaEmbalagem">
+            <option value="nao">Não incluído</option>
+            <option value="sim">Incluído</option>
+          </select>
+        </div>
+
+        <div class="field w4">
+          <label for="notaMaoObra">Mão de obra (carga/descarga)</label>
+          <select id="notaMaoObra" name="notaMaoObra">
+            <option value="nao">Não incluído</option>
+            <option value="carga_descarga">Carga e descarga</option>
+            <option value="carga">Somente carga</option>
+            <option value="descarga">Somente descarga</option>
+          </select>
+        </div>
+
         <div class="field">
           <label for="observacoes">Observacoes</label>
           <textarea id="observacoes" name="observacoes" maxlength="400" placeholder="Detalhes importantes da negociacao, restricoes ou observacoes gerais"></textarea>
@@ -515,9 +541,9 @@
         <div class="proposal-block-title">Notas gerais:</div>
         <ol class="proposal-notes">
           <li>Todos os transportes realizados pela INOVA Mudanças são assegurados e rastreados do local de saída até o destino.</li>
-          <li>Não estamos considerando desmontagem de móveis. Caso seja necessária, podemos incluir ao orçamento.</li>
-          <li>Não estamos considerando o fornecimento de embalagem. Caso seja necessária, podemos incluir ao orçamento.</li>
-          <li>Não estamos considerando mão de obra para carga e descarga. Caso seja necessária, podemos incluir ao orçamento.</li>
+          <li id="prop-nota-desmontagem">Não estamos considerando desmontagem de móveis. Caso seja necessária, podemos incluir ao orçamento.</li>
+          <li id="prop-nota-embalagem">Não estamos considerando o fornecimento de embalagem. Caso seja necessária, podemos incluir ao orçamento.</li>
+          <li id="prop-nota-maoobra">Não estamos considerando mão de obra para carga e descarga. Caso seja necessária, podemos incluir ao orçamento.</li>
           <li>Não desmontamos armários embutidos em paredes.</li>
           <li>Não transportamos animais de estimação.</li>
         </ol>
@@ -828,12 +854,13 @@
                   <th>RG</th>
                   <th>Telefone</th>
                   <th>E-mail</th>
+                  <th>Status</th>
                   <th>Acoes</th>
                 </tr>
               </thead>
               <tbody id="responsaveis-body">
                 <tr>
-                  <td colspan="6">Nenhum responsavel cadastrado.</td>
+                  <td colspan="7">Nenhum responsavel cadastrado.</td>
                 </tr>
               </tbody>
             </table>

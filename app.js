@@ -206,6 +206,8 @@
     let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
     let sessaoPollingId = null;
     const SESSAO_POLLING_INTERVALO_MS = 15000;
+    let responsaveisPollingId = null;
+    const RESPONSAVEIS_POLLING_INTERVALO_MS = 20000;
 
     // "Lembrar-me": promove uma sessao lembrada no localStorage para a
     // sessao desta aba, caso ainda nao exista uma sessao ativa nela.
@@ -766,6 +768,12 @@
       cadastroConteudoMotoristas.hidden = tipo !== "motoristas";
       cadastroConteudoVeiculos.hidden = tipo !== "veiculos";
       cadastroConteudoTiposServico.hidden = tipo !== "tipos-servico";
+
+      if (tipo === "responsaveis" && ehAdmin()) {
+        iniciarPollingResponsaveis();
+      } else {
+        pararPollingResponsaveis();
+      }
     }
 
     function mostrarLoginMensagem(texto, tipo = "error") {
@@ -811,6 +819,7 @@
 
     async function sair() {
       pararPollingSessao();
+      pararPollingResponsaveis();
       try {
         await apiRequest("/auth/logout", { method: "POST" });
       } catch (_error) {
@@ -840,6 +849,31 @@
       }
     }
 
+    async function atualizarStatusResponsaveis() {
+      try {
+        const dados = await apiRequest("/responsaveis");
+        if (Array.isArray(dados) && dados.length > 0) {
+          responsaveisCache = dados;
+          localStorage.setItem(RESPONSAVEL_STORAGE_KEY, JSON.stringify(responsaveisCache));
+          renderizarResponsaveis();
+        }
+      } catch (_erro) {
+        // mantem a ultima lista carregada se a chamada falhar
+      }
+    }
+
+    function iniciarPollingResponsaveis() {
+      pararPollingResponsaveis();
+      responsaveisPollingId = setInterval(atualizarStatusResponsaveis, RESPONSAVEIS_POLLING_INTERVALO_MS);
+    }
+
+    function pararPollingResponsaveis() {
+      if (responsaveisPollingId) {
+        clearInterval(responsaveisPollingId);
+        responsaveisPollingId = null;
+      }
+    }
+
     function verificarSessaoAtiva() {
       if (!authToken || sessaoEncerradaAtiva) {
         return;
@@ -852,6 +886,7 @@
 
     function tratarSessaoEncerrada() {
       pararPollingSessao();
+      pararPollingResponsaveis();
       if (!sessaoEncerradaOverlay.hidden) {
         return;
       }
@@ -921,6 +956,7 @@
 
     function ativarModoLocal(nomeUsuario, mensagem) {
       pararPollingSessao();
+      pararPollingResponsaveis();
       authToken = "";
       apiDisponivel = false;
       usuarioLogado = nomeUsuario;
@@ -2474,13 +2510,25 @@
       }
     }
 
+    function statusResponsavel(item) {
+      if (!item.logado) {
+        return '<span class="status status-neutro">⚪ Offline</span>';
+      }
+      const ultimaAtividade = item.ultimaAtividadeEm ? new Date(item.ultimaAtividadeEm).getTime() : NaN;
+      const online = Number.isFinite(ultimaAtividade) && Date.now() - ultimaAtividade <= 30000;
+      if (online) {
+        return '<span class="status status-sucesso">🟢 Online agora</span>';
+      }
+      return `<span class="status status-andamento">🕓 Visto ${sinoTempoRelativo(item.ultimaAtividadeEm)}</span>`;
+    }
+
     function renderizarResponsaveis() {
       const lista = obterResponsaveis();
       responsaveisTbody.innerHTML = "";
       configurarPermissaoResponsaveis();
 
       if (lista.length === 0) {
-        responsaveisTbody.innerHTML = "<tr><td colspan='6'>Nenhum responsavel cadastrado.</td></tr>";
+        responsaveisTbody.innerHTML = "<tr><td colspan='7'>Nenhum responsavel cadastrado.</td></tr>";
         atualizarSelectResponsaveis();
         atualizarSelectsFinanceiro();
         return;
@@ -2495,6 +2543,7 @@
             <td data-label="RG">${item.rg || "-"}</td>
             <td data-label="Telefone">${item.telefone || "-"}</td>
             <td data-label="E-mail">${item.email || "-"}</td>
+            <td data-label="Status">${ehAdmin() ? statusResponsavel(item) : "-"}</td>
             <td data-label="Acoes">
               <div class="table-actions">
                 <button type="button" class="btn-secondary" data-edit-responsavel="${item.id}">Editar</button>
@@ -2895,6 +2944,21 @@
       message.className = "message";
     }
 
+    const TEXTOS_NOTA_DESMONTAGEM = {
+      nao: "Não estamos considerando desmontagem de móveis. Caso seja necessária, podemos incluir ao orçamento.",
+      sim: "Estamos considerando desmontagem de móveis."
+    };
+    const TEXTOS_NOTA_EMBALAGEM = {
+      nao: "Não estamos considerando o fornecimento de embalagem. Caso seja necessária, podemos incluir ao orçamento.",
+      sim: "Estamos considerando o fornecimento de embalagem."
+    };
+    const TEXTOS_NOTA_MAO_OBRA = {
+      nao: "Não estamos considerando mão de obra para carga e descarga. Caso seja necessária, podemos incluir ao orçamento.",
+      carga_descarga: "Estamos considerando mão de obra para carga e descarga.",
+      carga: "Estamos considerando mão de obra para carga.",
+      descarga: "Estamos considerando mão de obra para descarga."
+    };
+
     function preencherPropostaComDados(dados) {
       const codigo = dados.codigo || form.codigoEdicao.value || gerarCodigo();
       const hoje = dados.criadoEm ? formatarDataIso(dados.criadoEm) : formatarDataIso(new Date().toISOString());
@@ -2965,6 +3029,13 @@
       document.getElementById("prop-responsavel").textContent = dados.responsavel || "-";
       document.getElementById("prop-status-orc").textContent = dados.statusOrcamento || "-";
       document.getElementById("prop-status-ent").textContent = dados.statusEntrega || "-";
+
+      document.getElementById("prop-nota-desmontagem").textContent =
+        TEXTOS_NOTA_DESMONTAGEM[dados.notaDesmontagem] || TEXTOS_NOTA_DESMONTAGEM.nao;
+      document.getElementById("prop-nota-embalagem").textContent =
+        TEXTOS_NOTA_EMBALAGEM[dados.notaEmbalagem] || TEXTOS_NOTA_EMBALAGEM.nao;
+      document.getElementById("prop-nota-maoobra").textContent =
+        TEXTOS_NOTA_MAO_OBRA[dados.notaMaoObra] || TEXTOS_NOTA_MAO_OBRA.nao;
     }
 
     function abrirProposta() {
@@ -2989,7 +3060,10 @@
         valor: Number(form.valor.value || 0),
         responsavel: form.responsavel.value.trim(),
         statusOrcamento: form.statusOrcamento.value,
-        statusEntrega: form.statusEntrega.value
+        statusEntrega: form.statusEntrega.value,
+        notaDesmontagem: form.notaDesmontagem.value,
+        notaEmbalagem: form.notaEmbalagem.value,
+        notaMaoObra: form.notaMaoObra.value
       };
 
       preencherPropostaComDados(dados);
@@ -3150,6 +3224,9 @@
       form.statusEntrega.value = item.statusEntrega || "Pedido Recebido";
       form.responsavel.value = item.responsavel || "";
       form.observacoes.value = item.observacoes || "";
+      form.notaDesmontagem.value = item.notaDesmontagem || "nao";
+      form.notaEmbalagem.value = item.notaEmbalagem || "nao";
+      form.notaMaoObra.value = item.notaMaoObra || "nao";
       atualizarBadgeNumeroOrcamento(item.numero ? formatarCodigoPorNumero(item.numero) : item.codigo);
       form.cliente.focus();
     }
@@ -3198,7 +3275,10 @@
         statusOrcamento: form.statusOrcamento.value,
         statusEntrega: form.statusEntrega.value,
         responsavel: form.responsavel.value.trim(),
-        observacoes: form.observacoes.value.trim()
+        observacoes: form.observacoes.value.trim(),
+        notaDesmontagem: form.notaDesmontagem.value,
+        notaEmbalagem: form.notaEmbalagem.value,
+        notaMaoObra: form.notaMaoObra.value
       };
     }
 

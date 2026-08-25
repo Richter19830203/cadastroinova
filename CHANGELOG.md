@@ -6,6 +6,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e o versionamento segue [Semantic Versioning](https://semver.org/lang/pt-BR/)
 (MAJOR.MINOR.PATCH).
 
+## [1.6.0] - 2026-08-25
+
+- Notas gerais da Proposta Comercial agora são selecionáveis por orçamento: desmontagem de móveis, fornecimento de embalagem e mão de obra de carga/descarga, cada uma com opções de texto pronto
+- Nova coluna "Status" no Cadastro de Responsáveis (só pro admin): mostra quem está 🟢 online agora, 🕓 visto há X minutos/horas ou ⚪ offline
+
 ## [1.5.0] - 2026-08-14
 
 - Sino de alertas 🔔 (só pro admin): avisa sobre pedidos de redefinição de senha pendentes e quando sai uma nova versão do sistema — clique pra ver o que mudou
