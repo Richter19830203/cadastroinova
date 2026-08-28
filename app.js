@@ -35,6 +35,7 @@
     })();
     const AUTH_TOKEN_KEY = "inova_auth_token";
     const AUTH_USER_KEY = "inova_usuario_logado";
+    const AUTH_ROLE_KEY = "inova_usuario_role";
     const LOGIN_MODO_LOCAL_KEY = "inova_login_modo_local";
     const MODO_LOCAL_ARQUIVO = window.location.protocol === "file:";
 
@@ -133,6 +134,7 @@
     const sessaoEncerradaOkButton = document.getElementById("sessao-encerrada-ok");
     const usuarioLogadoChip = document.getElementById("usuario-logado-chip");
     const usuarioLogadoNomeEl = document.getElementById("usuario-logado-nome");
+    const usuarioLogadoAdminBadge = document.getElementById("usuario-logado-admin-badge");
     const botaoSairButton = document.getElementById("botao-sair");
     const sidebarToggleMobileButton = document.getElementById("sidebar-toggle-mobile");
     const sidebarBackdrop = document.getElementById("sidebar-backdrop");
@@ -191,6 +193,7 @@
     let orcamentosCache = [];
     let clientesCache = [];
     let responsaveisCache = [];
+    const responsaveisRevelados = new Set();
     let motoristasCache = [];
     let veiculosCache = [];
     let categoriasDespesasCache = [];
@@ -201,6 +204,7 @@
     let opcoesLookupCache = {};
     let apiDisponivel = false;
     let usuarioLogado = null;
+    let usuarioRole = "";
     let codigoOrcamentoPendenteExclusao = null;
     let sessaoEncerradaAtiva = false;
     let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || "";
@@ -219,6 +223,9 @@
       }
       if (localStorage.getItem(LOGIN_MODO_LOCAL_KEY)) {
         sessionStorage.setItem(LOGIN_MODO_LOCAL_KEY, localStorage.getItem(LOGIN_MODO_LOCAL_KEY));
+      }
+      if (localStorage.getItem(AUTH_ROLE_KEY)) {
+        sessionStorage.setItem(AUTH_ROLE_KEY, localStorage.getItem(AUTH_ROLE_KEY));
       }
     }
     let numeroOrcamentoReservado = null;
@@ -813,6 +820,7 @@
         return;
       }
       usuarioLogadoNomeEl.textContent = usuarioLogado;
+      usuarioLogadoAdminBadge.hidden = !ehAdmin();
       usuarioLogadoChip.hidden = false;
       usuarioLogadoChip.style.display = "flex";
     }
@@ -827,11 +835,14 @@
       }
       authToken = "";
       usuarioLogado = null;
+      usuarioRole = "";
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
       sessionStorage.removeItem(AUTH_USER_KEY);
+      sessionStorage.removeItem(AUTH_ROLE_KEY);
       sessionStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(AUTH_ROLE_KEY);
       localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
       bloquearInterface();
       mostrarLoginMensagem("Você saiu do sistema.", "ok");
@@ -893,11 +904,14 @@
       sessaoEncerradaAtiva = true;
       authToken = "";
       usuarioLogado = null;
+      usuarioRole = "";
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
       sessionStorage.removeItem(AUTH_USER_KEY);
+      sessionStorage.removeItem(AUTH_ROLE_KEY);
       sessionStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(AUTH_ROLE_KEY);
       localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
       document.body.classList.add("app-locked");
       ocultarChipUsuario();
@@ -905,22 +919,26 @@
       sessaoEncerradaOverlay.style.display = "flex";
     }
 
-    function concluirLogin(nomeUsuario, token) {
+    function concluirLogin(nomeUsuario, token, role) {
       sessaoEncerradaAtiva = false;
       authToken = token;
       usuarioLogado = nomeUsuario;
+      usuarioRole = role || "";
       iniciarPollingSessao();
       sessionStorage.setItem(AUTH_TOKEN_KEY, token);
       sessionStorage.setItem(AUTH_USER_KEY, nomeUsuario);
+      sessionStorage.setItem(AUTH_ROLE_KEY, usuarioRole);
       sessionStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
 
       if (loginLembrar && loginLembrar.checked) {
         localStorage.setItem(AUTH_TOKEN_KEY, token);
         localStorage.setItem(AUTH_USER_KEY, nomeUsuario);
+        localStorage.setItem(AUTH_ROLE_KEY, usuarioRole);
         localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
       } else {
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(AUTH_ROLE_KEY);
         localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
       }
 
@@ -963,15 +981,18 @@
 
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
       sessionStorage.setItem(AUTH_USER_KEY, nomeUsuario);
+      sessionStorage.setItem(AUTH_ROLE_KEY, usuarioRole);
       sessionStorage.setItem(LOGIN_MODO_LOCAL_KEY, "1");
 
       if (loginLembrar && loginLembrar.checked) {
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.setItem(AUTH_USER_KEY, nomeUsuario);
+        localStorage.setItem(AUTH_ROLE_KEY, usuarioRole);
         localStorage.setItem(LOGIN_MODO_LOCAL_KEY, "1");
       } else {
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(AUTH_ROLE_KEY);
         localStorage.removeItem(LOGIN_MODO_LOCAL_KEY);
       }
 
@@ -1041,7 +1062,7 @@
         skipAuth: true
       })
         .then((response) => {
-          concluirLogin(response.user.username, response.token);
+          concluirLogin(response.user.username, response.token, response.user.role);
           return true;
         })
         .catch((error) => {
@@ -1742,8 +1763,10 @@
         apiDisponivel = false;
         sessionStorage.removeItem(AUTH_TOKEN_KEY);
         sessionStorage.removeItem(AUTH_USER_KEY);
+        sessionStorage.removeItem(AUTH_ROLE_KEY);
         authToken = "";
         usuarioLogado = null;
+        usuarioRole = "";
         bloquearInterface();
         throw _error;
       }
@@ -2536,22 +2559,26 @@
 
       const html = lista
         .sort((a, b) => a.id - b.id)
-        .map((item) => `
+        .map((item) => {
+          const revelado = responsaveisRevelados.has(item.id);
+          return `
           <tr>
             <td data-label="ID" class="mono">${item.id}</td>
             <td data-label="Nome">${item.nome}</td>
-            <td data-label="RG">${item.rg || "-"}</td>
-            <td data-label="Telefone">${item.telefone || "-"}</td>
-            <td data-label="E-mail">${item.email || "-"}</td>
+            <td data-label="RG">${revelado ? (item.rg || "-") : "••••••"}</td>
+            <td data-label="Telefone">${revelado ? (item.telefone || "-") : "••••••"}</td>
+            <td data-label="E-mail">${revelado ? (item.email || "-") : "••••••"}</td>
             <td data-label="Status">${ehAdmin() ? statusResponsavel(item) : "-"}</td>
-            <td data-label="Acoes">
-              <div class="table-actions">
+            <td data-label="Ações">
+              <div class="table-actions acoes-icones">
+                <button type="button" class="btn-icone${revelado ? " revelado" : ""}" data-toggle-responsavel="${item.id}" title="Visualizar" aria-label="Visualizar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
                 <button type="button" class="btn-secondary" data-edit-responsavel="${item.id}">Editar</button>
                 <button type="button" class="btn-secondary" data-delete-responsavel="${item.id}">Excluir</button>
               </div>
             </td>
           </tr>
-        `)
+        `;
+        })
         .join("");
 
       responsaveisTbody.innerHTML = html;
@@ -3134,18 +3161,16 @@
       atualizarSelectsFinanceiro();
     }
 
-    const RESPONSAVEIS_RESUMO_FINANCEIRO = ["INOVA", "ALLANA"];
     const MASCARA_VALOR = "••••••";
     let resumoFinanceiroCache = null;
     let resumoFinanceiroRevelado = false;
 
     function podeVerResumoFinanceiro() {
-      const nome = String(usuarioLogado || "").trim().toUpperCase();
-      return RESPONSAVEIS_RESUMO_FINANCEIRO.includes(nome);
+      return ehAdmin();
     }
 
     function ehAdmin() {
-      return String(usuarioLogado || "").trim().toUpperCase() === "INOVA";
+      return String(usuarioRole || "").trim().toUpperCase() === "ADMIN";
     }
 
     function atualizarMetricas(orcamentos) {
@@ -3804,14 +3829,25 @@
     });
 
     responsaveisTbody.addEventListener("click", async (event) => {
-      const botao = event.target;
-      if (!(botao instanceof HTMLButtonElement)) {
+      const botao = event.target instanceof Element ? event.target.closest("button") : null;
+      if (!botao) {
         return;
       }
 
+      const idToggle = Number(botao.getAttribute("data-toggle-responsavel") || 0);
       const idEditar = Number(botao.getAttribute("data-edit-responsavel") || 0);
       const idExcluir = Number(botao.getAttribute("data-delete-responsavel") || 0);
       const lista = obterResponsaveis();
+
+      if (idToggle) {
+        if (responsaveisRevelados.has(idToggle)) {
+          responsaveisRevelados.delete(idToggle);
+        } else {
+          responsaveisRevelados.add(idToggle);
+        }
+        renderizarResponsaveis();
+        return;
+      }
 
       if (idEditar) {
         const item = lista.find((responsavel) => Number(responsavel.id) === idEditar);
@@ -4540,6 +4576,67 @@
       });
     }
 
+    function grafUltimoDiaMes(ano, mes) {
+      return new Date(Number(ano), Number(mes), 0).getDate();
+    }
+
+    function grafIntervaloBarraMes(p, indice) {
+      let ano;
+      let mes;
+      if (p.ano === "todos" && p.mes === "todos") {
+        ano = grafAnos[indice];
+        return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` };
+      }
+      if (p.ano === "todos") {
+        ano = grafAnos[indice];
+        mes = p.mes;
+      } else if (p.mes === "todos") {
+        ano = p.ano;
+        mes = String(indice + 1).padStart(2, "0");
+      } else {
+        ano = p.ano;
+        mes = p.mes;
+      }
+      const ultimoDia = String(grafUltimoDiaMes(ano, mes)).padStart(2, "0");
+      return { inicio: `${ano}-${mes}-01`, fim: `${ano}-${mes}-${ultimoDia}` };
+    }
+
+    function grafAnimarLargura(containerEl) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          containerEl.querySelectorAll(".preenchido").forEach((el, i) => {
+            el.style.transitionDelay = `${i * 60}ms`;
+            el.style.width = `${el.getAttribute("data-largura")}%`;
+          });
+        });
+      });
+    }
+
+    function grafIrParaOrcamentosComStatus(status) {
+      alternarAba("orcamentos");
+      filtroStatusOrcamento.value = status;
+      aplicarFiltrosButton.click();
+      requestAnimationFrame(() => {
+        const titulo = document.getElementById("titulo-listagem");
+        if (titulo) {
+          titulo.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+
+    function grafIrParaOrcamentosDoMes(inicio, fim) {
+      alternarAba("orcamentos");
+      filtroDataInicio.value = inicio;
+      filtroDataFim.value = fim;
+      aplicarFiltrosButton.click();
+      requestAnimationFrame(() => {
+        const titulo = document.getElementById("titulo-listagem");
+        if (titulo) {
+          titulo.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+
     function grafRenderMes() {
       const p = grafPeriodos.mes;
       const dados = obterOrcamentos().filter((o) => grafDentroDoPeriodo(o.criadoEm, p));
@@ -4579,18 +4676,29 @@
         { rotulo: "Média por " + unidade, valor: grafFormatarNumero(Math.round(media)) }
       ]);
 
-      document.getElementById("graf-grafico-mes").innerHTML = valores
+      const graficoMesEl = document.getElementById("graf-grafico-mes");
+      graficoMesEl.innerHTML = valores
         .map((v, i) => {
           const classes = ["graf-col"];
           if (i === idxPico && v > 0) classes.push("maior", "destaque");
           if (i === idxMenor) classes.push("menor", "destaque");
+          const { inicio, fim } = grafIntervaloBarraMes(p, i);
           return `
-          <div class="${classes.join(" ")}" title="${labels[i]}: ${v} orçamento(s)">
+          <div class="${classes.join(" ")}" title="${labels[i]}: ${v} orçamento(s)" data-inicio="${inicio}" data-fim="${fim}">
             <span class="valor">${v}</span>
-            <div class="barra" style="height:${Math.round((v / max) * 200)}px"></div>
+            <div class="barra" data-altura="${Math.round((v / max) * 200)}" style="height:0px"></div>
           </div>`;
         })
         .join("");
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          graficoMesEl.querySelectorAll(".barra").forEach((barra, i) => {
+            barra.style.transitionDelay = `${i * 60}ms`;
+            barra.style.height = `${barra.getAttribute("data-altura")}px`;
+          });
+        });
+      });
 
       document.getElementById("graf-rotulos-mes").innerHTML = labels.map((l) => `<span>${l}</span>`).join("");
 
@@ -4603,6 +4711,18 @@
           return `<td class="${cls}">${v}</td>`;
         }).join("") + "</tr>";
     }
+
+    document.getElementById("graf-grafico-mes").addEventListener("click", (event) => {
+      const coluna = event.target instanceof Element ? event.target.closest(".graf-col") : null;
+      if (!coluna) {
+        return;
+      }
+      const inicio = coluna.getAttribute("data-inicio");
+      const fim = coluna.getAttribute("data-fim");
+      if (inicio && fim) {
+        grafIrParaOrcamentosDoMes(inicio, fim);
+      }
+    });
 
     function grafRenderFunil() {
       const p = grafPeriodos.funil;
@@ -4630,19 +4750,29 @@
       ]);
 
       const max = linhas[0].total;
-      document.getElementById("graf-grafico-funil").innerHTML = linhas
+      const graficoFunilEl = document.getElementById("graf-grafico-funil");
+      graficoFunilEl.innerHTML = linhas
         .map((f) => `
-        <div class="graf-linha" title="${f.status}: ${f.total} orçamento(s)">
+        <div class="graf-linha clicavel" title="${f.status}: ${f.total} orçamento(s)" data-status="${f.status}">
           <span class="nome">${f.status}</span>
-          <div class="trilho"><div class="preenchido" style="width:${Math.max((f.total / max) * 100, 1)}%"></div></div>
+          <div class="trilho"><div class="preenchido" data-largura="${Math.max((f.total / max) * 100, 1)}" style="width:0%"></div></div>
           <span class="num">${grafFormatarNumero(f.total)}</span>
         </div>`)
         .join("");
+      grafAnimarLargura(graficoFunilEl);
 
       document.getElementById("graf-tabela-funil").innerHTML =
         "<tr><th>Status</th>" + linhas.map((f) => `<th style="text-align:center">${f.status}</th>`).join("") + "</tr>" +
         "<tr><th>Orçamentos</th>" + linhas.map((f) => `<td>${f.total}</td>`).join("") + "</tr>";
     }
+
+    document.getElementById("graf-grafico-funil").addEventListener("click", (event) => {
+      const linha = event.target instanceof Element ? event.target.closest(".graf-linha") : null;
+      const status = linha ? linha.getAttribute("data-status") : null;
+      if (status) {
+        grafIrParaOrcamentosComStatus(status);
+      }
+    });
 
     function grafRenderConversao() {
       const p = grafPeriodos.conversao;
@@ -4679,7 +4809,8 @@
       const nomeMaior = linhas[0].taxa > 0 ? linhas[0].nome : null;
       const nomeMenor = linhas.length > 1 ? linhas[linhas.length - 1].nome : null;
 
-      document.getElementById("graf-grafico-conversao").innerHTML = linhas
+      const graficoConversaoEl = document.getElementById("graf-grafico-conversao");
+      graficoConversaoEl.innerHTML = linhas
         .map((l) => {
           const classes = ["graf-linha"];
           let marcador = "";
@@ -4688,11 +4819,12 @@
           return `
           <div class="${classes.join(" ")}" title="${l.nome}: ${l.aprovados} aprovado(s) de ${l.total}">
             <span class="nome">${l.nome}</span>
-            <div class="trilho"><div class="preenchido" style="width:${Math.max((l.taxa / max) * 100, l.taxa > 0 ? 1 : 0)}%"></div></div>
+            <div class="trilho"><div class="preenchido" data-largura="${Math.max((l.taxa / max) * 100, l.taxa > 0 ? 1 : 0)}" style="width:0%"></div></div>
             <span class="num">${l.taxa.toFixed(1).replace(".", ",")}%<span style="font-weight:600;color:var(--muted);font-size:0.72rem;"> · ${l.aprovados}/${l.total}</span>${marcador}</span>
           </div>`;
         })
         .join("");
+      grafAnimarLargura(graficoConversaoEl);
 
       document.getElementById("graf-tabela-conversao").innerHTML =
         "<tr><th>Responsável</th>" + linhas.map((l) => `<th style="text-align:center">${l.nome}</th>`).join("") + "</tr>" +
@@ -4735,7 +4867,8 @@
       const nomeMaior = linhas[0].nome;
       const nomeMenor = linhas.length > 1 ? linhas[linhas.length - 1].nome : null;
 
-      document.getElementById("graf-grafico-resp").innerHTML = linhas
+      const graficoRespEl = document.getElementById("graf-grafico-resp");
+      graficoRespEl.innerHTML = linhas
         .map((l) => {
           const classes = ["graf-linha"];
           let marcador = "";
@@ -4744,11 +4877,12 @@
           return `
           <div class="${classes.join(" ")}" title="${l.nome}: ${l.total} orçamento(s)">
             <span class="nome">${l.nome}</span>
-            <div class="trilho"><div class="preenchido" style="width:${Math.max((l.total / max) * 100, 1)}%"></div></div>
+            <div class="trilho"><div class="preenchido" data-largura="${Math.max((l.total / max) * 100, 1)}" style="width:0%"></div></div>
             <span class="num">${grafFormatarNumero(l.total)}${marcador}</span>
           </div>`;
         })
         .join("");
+      grafAnimarLargura(graficoRespEl);
 
       document.getElementById("graf-tabela-resp").innerHTML =
         "<tr><th>Responsável</th>" + linhas.map((l) => `<th style="text-align:center">${l.nome}</th>`).join("") + "</tr>" +
@@ -4780,7 +4914,8 @@
       const nomeMaior = linhas[0].nome;
       const nomeMenor = linhas.length > 1 ? linhas[linhas.length - 1].nome : null;
 
-      document.getElementById("graf-grafico-despesas").innerHTML = linhas
+      const graficoDespesasEl = document.getElementById("graf-grafico-despesas");
+      graficoDespesasEl.innerHTML = linhas
         .map((l) => {
           const classes = ["graf-linha"];
           let marcador = "";
@@ -4789,11 +4924,12 @@
           return `
           <div class="${classes.join(" ")}" title="${l.nome}: ${formatarMoeda(l.valor)}">
             <span class="nome">${l.nome}</span>
-            <div class="trilho"><div class="preenchido" style="width:${Math.max((l.valor / max) * 100, 1)}%"></div></div>
+            <div class="trilho"><div class="preenchido" data-largura="${Math.max((l.valor / max) * 100, 1)}" style="width:0%"></div></div>
             <span class="num">${formatarMoeda(l.valor)}${marcador}</span>
           </div>`;
         })
         .join("");
+      grafAnimarLargura(graficoDespesasEl);
 
       document.getElementById("graf-tabela-despesas").innerHTML =
         "<tr><th>" + (grafModoDespesa === "categoria" ? "Categoria" : "Centro de Custo") + "</th>" + linhas.map((l) => `<th style="text-align:center">${l.nome}</th>`).join("") + "</tr>" +
@@ -4819,7 +4955,9 @@
       const ordenado = Object.entries(porUF).sort((a, b) => b[1] - a[1]);
       const ufMax = ordenado.length > 0 ? ordenado[0][0] : null;
 
-      document.getElementById("graf-mapa-br").innerHTML = Object.entries(GRAF_GRADE_UF)
+      const mapaBrEl = document.getElementById("graf-mapa-br");
+      const entradasUF = Object.entries(GRAF_GRADE_UF);
+      mapaBrEl.innerHTML = entradasUF
         .map(([uf, pos]) => {
           const v = porUF[uf] || 0;
           const pct = v > 0 ? Math.round(15 + (v / max) * 80) : 0;
@@ -4829,12 +4967,20 @@
           if (uf === ufMax) classes.push("max");
           const fundo = v > 0 ? `background: color-mix(in srgb, var(--brand) ${pct}%, var(--panel));` : "";
           return `
-          <div class="${classes.join(" ")}" style="grid-row:${pos[0]};grid-column:${pos[1]};${fundo}" title="${uf}: ${v} orçamento(s)">
+          <div class="${classes.join(" ")}" style="grid-row:${pos[0]};grid-column:${pos[1]};${fundo}opacity:0;" title="${uf}: ${v} orçamento(s)">
             ${uf}
             ${v > 0 ? `<span class="qtd">${v}</span>` : ""}
           </div>`;
         })
         .join("");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          mapaBrEl.querySelectorAll(".graf-uf").forEach((el, i) => {
+            el.style.transitionDelay = `${i * 12}ms`;
+            el.style.opacity = "1";
+          });
+        });
+      });
 
       document.getElementById("graf-mapa-legenda").innerHTML = `
         <div class="faixa"><span class="amostra" style="background: color-mix(in srgb, var(--brand) 95%, var(--panel));"></span> Mais orçamentos</div>
@@ -4979,6 +5125,7 @@
       const modoLocalAtivo = sessionStorage.getItem(LOGIN_MODO_LOCAL_KEY) === "1";
       if (sessao) {
         usuarioLogado = sessao;
+        usuarioRole = sessionStorage.getItem(AUTH_ROLE_KEY) || "";
       }
 
       if (!usuarioLogado) {

@@ -2,15 +2,28 @@
 // Atualizar este arquivo a cada mudanca: versao, build, dataBuild e o
 // array historico (mesmo conteudo do CHANGELOG.md, em formato de dados).
 window.INOVA_VERSAO = {
-  versao: "1.6.0",
-  build: "25/08/2026-1",
-  dataBuild: "2026-08-25",
+  versao: "1.7.0",
+  build: "27/08/2026-1",
+  dataBuild: "2026-08-27",
   desenvolvedor: "Felipe Richter Brólio",
   empresa: "INOVA Transportes e Mudanças",
   frontend: "Netlify",
   backend: "Node.js / Express",
   banco: "Neon PostgreSQL",
   historico: [
+    {
+      versao: "1.7.0",
+      data: "2026-08-27",
+      mudancas: [
+        "Nova conta de administrador própria, separada do usuário INOVA — reconhecimento de admin agora é por cargo, não mais pelo nome fixo",
+        "Selo \"🛡️ administrador\" no chip de usuário logado, que também ficou mais compacto e parou de sobrepor o conteúdo da tela",
+        "Resumo financeiro (Valor total/Ticket médio) liberado pra qualquer conta admin, em vez de uma lista fixa de nomes",
+        "RG, Telefone e E-mail dos Responsáveis cadastrados ficam ocultos por padrão, com um botão de visualizar por linha pra revelar",
+        "Gráfico \"Orçamentos por mês\" ganhou animação em cascata, destaque no hover e clique pra abrir a lista de orçamentos já filtrada por aquele mês; os outros 5 gráficos também animam a entrada, e o Funil de Status também é clicável",
+        "Formulário de Novo Orçamento e Lançamento de Despesas reorganizados em 4 colunas por linha, mais consistentes",
+        "Corrigida a acentuação em vários campos do Orçamento (orçamento, responsável, elaboração, negociação, ocorrência, observações) e o cabeçalho \"Ações\" em todas as tabelas do sistema"
+      ]
+    },
     {
       versao: "1.6.0",
       data: "2026-08-25",

@@ -6,6 +6,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e o versionamento segue [Semantic Versioning](https://semver.org/lang/pt-BR/)
 (MAJOR.MINOR.PATCH).
 
+## [1.7.0] - 2026-08-27
+
+- Nova conta de administrador própria, separada do usuário INOVA — reconhecimento de admin agora é por cargo, não mais pelo nome fixo
+- Selo "🛡️ administrador" no chip de usuário logado, que também ficou mais compacto e parou de sobrepor o conteúdo da tela
+- Resumo financeiro (Valor total/Ticket médio) liberado pra qualquer conta admin, em vez de uma lista fixa de nomes
+- RG, Telefone e E-mail dos Responsáveis cadastrados ficam ocultos por padrão, com um botão de visualizar por linha pra revelar
+- Gráfico "Orçamentos por mês" ganhou animação em cascata, destaque no hover e clique pra abrir a lista de orçamentos já filtrada por aquele mês; os outros 5 gráficos também animam a entrada, e o Funil de Status também é clicável
+- Formulário de Novo Orçamento e Lançamento de Despesas reorganizados em 4 colunas por linha, mais consistentes
+- Corrigida a acentuação em vários campos do Orçamento (orçamento, responsável, elaboração, negociação, ocorrência, observações) e o cabeçalho "Ações" em todas as tabelas do sistema
+
 ## [1.6.0] - 2026-08-25
 
 - Notas gerais da Proposta Comercial agora são selecionáveis por orçamento: desmontagem de móveis, fornecimento de embalagem e mão de obra de carga/descarga, cada uma com opções de texto pronto

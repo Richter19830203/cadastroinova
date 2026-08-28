@@ -115,7 +115,7 @@
       min-width: 0;
       display: grid;
       gap: 18px;
-      padding: 38px 32px 36px;
+      padding: 58px 32px 36px;
     }
 
     .tabs {
@@ -337,6 +337,7 @@
       grid-column: span 12;
     }
 
+    .field.w9 { grid-column: span 9; }
     .field.w6 { grid-column: span 6; }
     .field.w4 { grid-column: span 4; }
     .field.w3 { grid-column: span 3; }
@@ -1219,7 +1220,7 @@
       justify-content: flex-end;
       align-items: center;
       height: 100%;
-      cursor: default;
+      cursor: pointer;
     }
 
     .graf-col .barra {
@@ -1227,7 +1228,7 @@
       max-width: 44px;
       background: var(--brand);
       border-radius: 4px 4px 0 0;
-      transition: background 120ms ease;
+      transition: background 120ms ease, height 650ms cubic-bezier(0.34, 1.56, 0.64, 1);
       min-height: 2px;
     }
 
@@ -1311,6 +1312,10 @@
 
     .graf-linha:hover .preenchido {
       background: var(--brand-strong);
+    }
+
+    .graf-linha.clicavel {
+      cursor: pointer;
     }
 
     .graf-linha .num {
@@ -1449,7 +1454,7 @@
       background: var(--graf-grid);
       color: var(--muted);
       cursor: default;
-      transition: transform 120ms ease;
+      transition: transform 120ms ease, opacity 450ms ease;
     }
 
     .graf-uf:hover {
@@ -1694,6 +1699,7 @@
     }
 
     @media (max-width: 900px) {
+      .field.w9,
       .field.w6,
       .field.w4,
       .field.w3,
@@ -1803,20 +1809,53 @@
     /* ===== Usuario logado + Sair ===== */
     .usuario-logado-chip {
       position: fixed;
-      top: 12px;
-      left: 14px;
+      top: 10px;
+      left: 10px;
       z-index: 9998;
       display: flex;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
+      width: 230px;
       background: #fff;
       border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 6px 8px 6px 14px;
+      border-radius: 14px;
+      padding: 6px 7px;
       font-size: 0.8rem;
       font-weight: 700;
       color: var(--brand-strong);
       box-shadow: 0 6px 16px rgba(31, 87, 130, 0.16);
+      overflow: hidden;
+    }
+
+    .usuario-logado-chip .chip-texto {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .badge-admin {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #fff;
+      background: linear-gradient(135deg, #d99a1f, #b5790a);
+      border-radius: 999px;
+      padding: 3px 9px;
+    }
+
+    .badge-admin.mini {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: normal;
+      text-transform: none;
+      padding: 2px 6px;
+      flex-shrink: 0;
     }
 
     .btn-sair {
@@ -1824,11 +1863,12 @@
       background: var(--danger);
       color: #fff;
       border-radius: 999px;
-      padding: 6px 12px;
+      padding: 3px 9px;
       font: inherit;
       font-weight: 800;
       font-size: 0.74rem;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     .meu-cadastro-aviso {

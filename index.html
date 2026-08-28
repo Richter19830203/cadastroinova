@@ -89,7 +89,8 @@
   </div>
 
   <div class="usuario-logado-chip" id="usuario-logado-chip" hidden style="display: none;">
-    👤 Logado como <strong id="usuario-logado-nome">—</strong>
+    <span class="chip-texto">Logado <strong id="usuario-logado-nome">—</strong></span>
+    <span class="badge-admin mini" id="usuario-logado-admin-badge" hidden>admin</span>
     <button type="button" class="btn-sair" id="botao-sair">Sair</button>
   </div>
 
@@ -231,7 +232,7 @@
         </div>
       </div>
       <form id="orcamento-form" novalidate>
-        <div class="field w6">
+        <div class="field w3">
           <label for="cliente">Cliente</label>
           <input id="cliente" name="cliente" list="lista-clientes-orcamento" required maxlength="100" placeholder="Nome do cliente ou empresa">
           <datalist id="lista-clientes-orcamento"></datalist>
@@ -276,30 +277,30 @@
           <input id="contato" name="contato" maxlength="80" placeholder="Telefone ou e-mail">
         </div>
 
-        <div class="field w4">
+        <div class="field w3">
+          <label for="distancia">Distância (km)</label>
+          <input id="distancia" name="distancia" type="number" min="0" step="0.01" placeholder="Preencha manualmente">
+          <small id="distancia-status" class="distancia-status"></small>
+        </div>
+
+        <div class="field w3">
           <label for="origem">Origem</label>
           <input id="origem" name="origem" required maxlength="80" placeholder="Cidade de coleta">
         </div>
 
-        <div class="field w2">
+        <div class="field w3">
           <label for="origemUF">UF</label>
           <input id="origemUF" name="origemUF" list="lista-estados-br" required maxlength="2" placeholder="UF">
         </div>
 
-        <div class="field w4">
+        <div class="field w3">
           <label for="destino">Destino</label>
           <input id="destino" name="destino" required maxlength="80" placeholder="Cidade de entrega">
         </div>
 
-        <div class="field w2">
+        <div class="field w3">
           <label for="destinoUF">UF</label>
           <input id="destinoUF" name="destinoUF" list="lista-estados-br" required maxlength="2" placeholder="UF">
-        </div>
-
-        <div class="field w4">
-          <label for="distancia">Distância (km)</label>
-          <input id="distancia" name="distancia" type="number" min="0" step="0.01" placeholder="Preencha manualmente">
-          <small id="distancia-status" class="distancia-status"></small>
         </div>
 
         <div class="field w8">
@@ -314,7 +315,7 @@
           </div>
         </div>
 
-        <div class="field w4">
+        <div class="field w3">
           <label for="tipoVeiculo">Tipo de Veiculo</label>
           <select id="tipoVeiculo" name="tipoVeiculo">
            <option value="">Selecione</option>
@@ -344,14 +345,14 @@
           </select>
         </div>
 
-        <div class="field w4">
+        <div class="field w3">
           <label for="tipoServico">Tipo de Serviço</label>
           <select id="tipoServico" name="tipoServico" required>
             <option value="">Selecione</option>
           </select>
         </div>
 
-        <div class="field w4">
+        <div class="field w3">
           <label for="tipoCarga">Tipo de carga</label>
           <select id="tipoCarga" name="tipoCarga" required>
             <option value="">Selecione</option>
@@ -385,19 +386,19 @@
         </div>
 
         <div class="field w3">
-          <label for="validade">Validade do orcamento</label>
+          <label for="validade">Validade do orçamento</label>
           <input id="validade" name="validade" type="date">
         </div>
 
   <div class="field w3">
-          <label for="statusOrcamento">Status Orcamento</label>
+          <label for="statusOrcamento">Status Orçamento</label>
           <select id="statusOrcamento" name="statusOrcamento" required>
             <option value="Aguardando Retorno">Aguardando Retorno</option>
             <option value="Aprovado">Aprovado</option>
             <option value="Cancelado">Cancelado</option>
             <option value="Contratado">Contratado</option>
-            <option value="Em Elaboracao">Em Elaboracao</option>
-            <option value="Em Negociacao">Em Negociacao</option>
+            <option value="Em Elaboracao">Em Elaboração</option>
+            <option value="Em Negociacao">Em Negociação</option>
             <option value="Enviado">Enviado</option>
             <option value="Reprovado">Reprovado</option>
             <option value="Solicitado" selected>Solicitado</option>
@@ -413,7 +414,7 @@
             <option value="Em Rota">Em Rota</option>
             <option value="Em Transporte">Em Transporte</option>
             <option value="Entregue">Entregue</option>
-            <option value="Ocorrencia">Ocorrencia</option>
+            <option value="Ocorrencia">Ocorrência</option>
             <option value="Pedido Recebido" selected>Pedido Recebido</option>
             <option value="Programado">Programado</option>
             <option value="Reagendado">Reagendado</option>
@@ -421,7 +422,7 @@
         </div>
 
         <div class="field w3">
-          <label for="responsavel">Responsavel</label>
+          <label for="responsavel">Responsável</label>
           <select id="responsavel" name="responsavel">
             <option value="">Selecione</option>
             <option value="ALLAN">ALLAN</option>
@@ -436,7 +437,7 @@
           </select>
         </div>
 
-        <div class="field w4">
+        <div class="field w3">
           <label for="notaDesmontagem">Desmontagem de móveis</label>
           <select id="notaDesmontagem" name="notaDesmontagem">
             <option value="nao">Não incluído</option>
@@ -444,7 +445,7 @@
           </select>
         </div>
 
-        <div class="field w4">
+        <div class="field w3">
           <label for="notaEmbalagem">Fornecimento de embalagem</label>
           <select id="notaEmbalagem" name="notaEmbalagem">
             <option value="nao">Não incluído</option>
@@ -452,7 +453,7 @@
           </select>
         </div>
 
-        <div class="field w4">
+        <div class="field w3">
           <label for="notaMaoObra">Mão de obra (carga/descarga)</label>
           <select id="notaMaoObra" name="notaMaoObra">
             <option value="nao">Não incluído</option>
@@ -462,9 +463,9 @@
           </select>
         </div>
 
-        <div class="field">
-          <label for="observacoes">Observacoes</label>
-          <textarea id="observacoes" name="observacoes" maxlength="400" placeholder="Detalhes importantes da negociacao, restricoes ou observacoes gerais"></textarea>
+        <div class="field w6">
+          <label for="observacoes">Observações</label>
+          <textarea id="observacoes" name="observacoes" maxlength="400" placeholder="Detalhes importantes da negociação, restrições ou observações gerais"></textarea>
         </div>
 
         <div class="actions">
@@ -787,7 +788,7 @@
                 <th>Estado</th>
                 <th>Bairro</th>
                 <th>CEP</th>
-                <th>Acoes</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="clientes-body">
@@ -855,7 +856,7 @@
                   <th>Telefone</th>
                   <th>E-mail</th>
                   <th>Status</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="responsaveis-body">
@@ -934,7 +935,7 @@
                   <th>CPF</th>
                   <th>CNH</th>
                   <th>Telefone</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="motoristas-body">
@@ -1028,7 +1029,7 @@
                   <th>Modelo</th>
                   <th>Tipo</th>
                   <th>Motorista</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="veiculos-body">
@@ -1184,19 +1185,19 @@
                 <option>Variavel</option>
               </select>
             </div>
-            <div class="field w4">
+            <div class="field w3">
               <label for="despesaCategoria">Categoria</label>
               <select id="despesaCategoria" name="despesaCategoria" required></select>
             </div>
-            <div class="field w4">
+            <div class="field w3">
               <label for="despesaCentroCusto">Centro de Custo</label>
               <select id="despesaCentroCusto" name="despesaCentroCusto" required></select>
             </div>
-            <div class="field w4">
+            <div class="field w3">
               <label for="despesaFornecedor">Fornecedor</label>
               <input id="despesaFornecedor" name="despesaFornecedor" maxlength="120" placeholder="Fornecedor">
             </div>
-            <div class="field w6">
+            <div class="field w3">
               <label for="despesaDescricao">Descricao</label>
               <input id="despesaDescricao" name="despesaDescricao" maxlength="180" required>
             </div>
@@ -1237,7 +1238,7 @@
               <label for="despesaResponsavel">Responsável</label>
               <select id="despesaResponsavel" name="despesaResponsavel"></select>
             </div>
-            <div class="field w6">
+            <div class="field">
               <label for="despesaObservacoes">Observações</label>
               <textarea id="despesaObservacoes" name="despesaObservacoes" maxlength="400"></textarea>
             </div>
@@ -1324,7 +1325,7 @@
                   <th>Nome</th>
                   <th>Tipo</th>
                   <th>Status</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="categorias-despesas-body">
@@ -1382,7 +1383,7 @@
                   <th>Codigo</th>
                   <th>Nome</th>
                   <th>Status</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="formas-pagamento-body">

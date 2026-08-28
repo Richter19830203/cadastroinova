@@ -103,10 +103,11 @@ function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-function signAuthToken(username, sessionId) {
+function signAuthToken(username, sessionId, role) {
   const payload = JSON.stringify({
     username,
     sessionId,
+    role,
     exp: Date.now() + 1000 * 60 * 60 * 12
   });
   const payloadBase64 = Buffer.from(payload).toString("base64url");
@@ -659,7 +660,7 @@ app.post("/api/auth/login", async (req, res) => {
         "UPDATE usuarios SET sessao_token = $1, ultimo_login_em = NOW(), ultima_atividade_em = NOW() WHERE username = $2",
         [sessionId, user.username]
       );
-      const token = signAuthToken(user.username, sessionId);
+      const token = signAuthToken(user.username, sessionId, user.role_name);
       return res.json({
         token,
         user: {
@@ -672,16 +673,17 @@ app.post("/api/auth/login", async (req, res) => {
     const fallbackPassword = username ? FALLBACK_AUTH_CREDENTIALS[username] : null;
     if (!user && fallbackPassword && fallbackPassword === password) {
       const sessionId = crypto.randomUUID();
+      const role = username === "INOVA" ? "ADMIN" : "RESPONSAVEL";
       await pool.query(
         "UPDATE usuarios SET sessao_token = $1, ultimo_login_em = NOW(), ultima_atividade_em = NOW() WHERE username = $2",
         [sessionId, username]
       );
-      const token = signAuthToken(username, sessionId);
+      const token = signAuthToken(username, sessionId, role);
       return res.json({
         token,
         user: {
           username,
-          role: username === "INOVA" ? "ADMIN" : "RESPONSAVEL"
+          role
         }
       });
     }
@@ -788,7 +790,7 @@ app.post("/api/auth/logout", async (req, res) => {
 // Sino de alertas - so o admin ve os pedidos de redefinicao de senha pendentes.
 app.get("/api/auth/esqueci-senha/pendentes", async (req, res) => {
   try {
-    if (!ehAdmin(req.auth.username)) {
+    if (!ehAdmin(req.auth.role)) {
       return res.status(403).json({ error: "Apenas o administrador pode ver os pedidos de redefinicao de senha." });
     }
 
@@ -803,7 +805,7 @@ app.get("/api/auth/esqueci-senha/pendentes", async (req, res) => {
 
 app.post("/api/auth/esqueci-senha/marcar-lidas", async (req, res) => {
   try {
-    if (!ehAdmin(req.auth.username)) {
+    if (!ehAdmin(req.auth.role)) {
       return res.status(403).json({ error: "Apenas o administrador pode gerenciar os pedidos de redefinicao de senha." });
     }
 
@@ -890,8 +892,8 @@ app.put("/api/clientes/bulk", async (req, res) => {
   }
 });
 
-function ehAdmin(username) {
-  return String(username || "").trim().toUpperCase() === "INOVA";
+function ehAdmin(role) {
+  return String(role || "").trim().toUpperCase() === "ADMIN";
 }
 
 app.get("/api/responsaveis", async (req, res) => {
@@ -912,7 +914,7 @@ app.get("/api/responsaveis", async (req, res) => {
       ORDER BY r.id ASC;
     `);
 
-    if (ehAdmin(req.auth.username)) {
+    if (ehAdmin(req.auth.role)) {
       return res.json(result.rows);
     }
 
@@ -930,7 +932,7 @@ app.get("/api/responsaveis", async (req, res) => {
 });
 
 app.put("/api/responsaveis/bulk", async (req, res) => {
-  if (!ehAdmin(req.auth.username)) {
+  if (!ehAdmin(req.auth.role)) {
     return res.status(403).json({ error: "Apenas o administrador pode gerenciar todos os responsaveis." });
   }
 
@@ -1668,11 +1670,8 @@ app.get("/api/opcoes", async (_req, res) => {
   }
 });
 
-const RESPONSAVEIS_RESUMO_FINANCEIRO = ["INOVA", "ALLANA"];
-
 app.get("/api/orcamentos/resumo-financeiro", async (req, res) => {
-  const usuario = normalizeUserName(req.auth && req.auth.username);
-  if (!RESPONSAVEIS_RESUMO_FINANCEIRO.includes(usuario)) {
+  if (!ehAdmin(req.auth && req.auth.role)) {
     return res.status(403).json({ error: "Sem permissao para ver o resumo financeiro" });
   }
 
