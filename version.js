@@ -2,15 +2,23 @@
 // Atualizar este arquivo a cada mudanca: versao, build, dataBuild e o
 // array historico (mesmo conteudo do CHANGELOG.md, em formato de dados).
 window.INOVA_VERSAO = {
-  versao: "1.7.0",
-  build: "27/08/2026-1",
-  dataBuild: "2026-08-27",
+  versao: "1.8.0",
+  build: "01/09/2026-1",
+  dataBuild: "2026-09-01",
   desenvolvedor: "Felipe Richter Brólio",
   empresa: "INOVA Transportes e Mudanças",
   frontend: "Netlify",
   backend: "Node.js / Express",
   banco: "Neon PostgreSQL",
   historico: [
+    {
+      versao: "1.8.0",
+      data: "2026-09-01",
+      mudancas: [
+        "Novo botão \"Exportar Excel\" na aba Orçamento, ao lado do Exportar JSON — gera uma planilha .xlsx de verdade com todos os orçamentos, em colunas legíveis",
+        "Nova aba \"Manual de Uso\" na barra lateral, abaixo de Gráficos, com o passo a passo de todo o sistema e um botão \"Baixar PDF\""
+      ]
+    },
     {
       versao: "1.7.0",
       data: "2026-08-27",
@@ -56,8 +64,21 @@ window.INOVA_VERSAO = {
       mudancas: [
         "Menu lateral fixo (sidebar) substitui a barra de abas horizontais no topo",
         "Nova aba Cálculo de Rotas: busca de cidade, mapa (OpenStreetMap/Leaflet) e botão para copiar a distância pro Orçamento",
+      ]
+    },
+    {
+      versao: "1.2 .0",
+      data: "2026-08-10",
+      mudancas: [
         "Removidos os campos CEP Origem/CEP Destino do formulário de Orçamento",
         "Logo da INOVA mantido só na Proposta Comercial (não aparece mais no topo de todas as abas)",
+        "Corrigido: chip de usuário, Sobre o Sistema e versão não aparecem mais na impressão da proposta"
+      ]
+    },
+    {
+      versao: "1.1.0",
+      data: "2026-08-09",
+      mudancas: [
         "Corrigido: chip de usuário, Sobre o Sistema e versão não aparecem mais na impressão da proposta"
       ]
     },

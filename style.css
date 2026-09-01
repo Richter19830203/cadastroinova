@@ -675,6 +675,28 @@
       border: 1px solid var(--line);
     }
 
+    .btn-icone-excel {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ecf6ff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 6px 12px;
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+
+    .btn-icone-excel:hover {
+      background: #ffffff;
+      border-color: var(--brand);
+    }
+
+    .btn-icone-excel img {
+      height: 26px;
+      width: auto;
+      display: block;
+    }
+
     .table-wrap {
       overflow-x: auto;
       border: 1px solid var(--line);
@@ -1113,6 +1135,74 @@
     .btn-pdf:hover {
       border-color: var(--brand);
       color: var(--brand);
+    }
+
+    #painel-manual h2 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+    }
+
+    #painel-manual .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    #painel-manual h3 {
+      font-size: 1rem;
+      margin: 22px 0 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    #painel-manual h3:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 4px;
+    }
+
+    #painel-manual p,
+    #painel-manual li {
+      line-height: 1.65;
+    }
+
+    #painel-manual ol,
+    #painel-manual ul {
+      margin: 0 0 14px;
+      padding-left: 20px;
+    }
+
+    .ui {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.86em;
+      background: #eef6fc;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 1px 6px;
+      color: var(--ink);
+    }
+
+    table.overview {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 4px 0 16px;
+      font-size: 0.9rem;
+    }
+
+    table.overview th,
+    table.overview td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    table.overview th {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .graf-controles {
@@ -1593,6 +1683,7 @@
       #painel-cadastro,
       #painel-financeiro,
       #painel-graficos,
+      #painel-manual,
       #titulo-formulario,
       #orcamento-form,
       #mensagem,
@@ -1667,6 +1758,29 @@
 
       body.imprimindo-grafico .graf-col .valor {
         opacity: 1 !important;
+      }
+
+      /* Modo de impressao do manual de uso (PDF) */
+      body.imprimindo-manual #painel-orcamentos,
+      body.imprimindo-manual .proposal-wrap,
+      body.imprimindo-manual .proposal-wrap.active {
+        display: none !important;
+      }
+
+      body.imprimindo-manual #painel-manual {
+        display: block !important;
+      }
+
+      body.imprimindo-manual #painel-manual .card {
+        box-shadow: none;
+        border: 1px solid #cdd7e2;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 14px;
+      }
+
+      body.imprimindo-manual #manual-baixar-pdf {
+        display: none !important;
       }
 
       .proposal-sheet {

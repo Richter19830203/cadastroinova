@@ -188,6 +188,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>
           Gráficos
         </button>
+        <button class="tab-btn" type="button" id="tab-manual" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M4 19.5V6.5"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+          Manual de Uso
+        </button>
       </nav>
     </aside>
 
@@ -473,6 +477,9 @@
           <button class="btn-secondary" type="button" id="visualizar-proposta">Visualizar proposta comercial</button>
           <button class="btn-secondary" type="button" id="limpar-formulario">Limpar formulario</button>
           <button class="btn-secondary" type="button" id="exportar-json">Exportar JSON</button>
+          <button class="btn-icone-excel" type="button" id="exportar-excel" title="Exportar Excel" aria-label="Exportar Excel">
+            <img src="excel.png" alt="Exportar Excel">
+          </button>
         </div>
       </form>
       <p id="mensagem" class="message" role="status" aria-live="polite"></p>
@@ -1596,10 +1603,148 @@
         </details>
       </section>
     </div>
+
+    <div class="tab-panel" id="painel-manual">
+      <section class="card">
+        <div class="card-head">
+          <h2>Manual de Uso</h2>
+          <button class="btn-pdf" type="button" id="manual-baixar-pdf">Baixar PDF</button>
+        </div>
+        <p>Guia de referência do sistema, organizado na mesma ordem das abas ao lado. Trechos com o selo <span class="badge-admin">administrador</span> são exclusivos do admin.</p>
+      </section>
+
+      <section class="card">
+        <h2>1. Como entrar no sistema</h2>
+        <p>O acesso é feito por e-mail ou pelo nome de usuário cadastrado.</p>
+        <ol>
+          <li>Na tela de login, preencha <span class="ui">E-mail</span> (ou o seu nome de usuário) e <span class="ui">Senha</span>.</li>
+          <li>Marque <span class="ui">Lembrar-me</span> se estiver num computador de uso pessoal — assim não precisa logar de novo a cada visita.</li>
+          <li>Clique em <span class="ui">Entrar</span>.</li>
+        </ol>
+        <h3>Esqueci minha senha</h3>
+        <ol>
+          <li>Na tela de login, clique em <span class="ui">Esqueci minha senha?</span></li>
+          <li>Informe o e-mail cadastrado e clique em <span class="ui">Enviar link de recuperação</span>.</li>
+          <li>O administrador é avisado por e-mail do pedido e redefine sua senha manualmente — combine com ele depois de enviar o pedido.</li>
+        </ol>
+        <p><span class="badge-admin">administrador</span> Pedidos de redefinição de senha também aparecem no sino de alertas 🔔, no canto superior do sistema.</p>
+      </section>
+
+      <section class="card">
+        <h2>2. Orçamentos</h2>
+        <p>Tela principal do sistema: cadastro de orçamentos, proposta comercial e a lista de tudo que já foi registrado.</p>
+        <p>No topo da aba, três cartões resumem a base: <strong>Total de orçamentos</strong> (sempre visível) e <strong>Valor total cotado</strong>/<strong>Ticket médio</strong> (ocultos por padrão). Ao lado do título "Novo Orçamento", o chip <span class="ui">Nº ORÇ:</span> já mostra o próximo número que será usado ao salvar.</p>
+
+        <h3>Criar um novo orçamento</h3>
+        <ol>
+          <li>Preencha <span class="ui">Cliente</span>, <span class="ui">A/C</span> e <span class="ui">Tel./E-mail</span>.</li>
+          <li>Informe <span class="ui">Origem</span>/<span class="ui">UF</span> e <span class="ui">Destino</span>/<span class="ui">UF</span>.</li>
+          <li>Preencha <span class="ui">Distância (km)</span> manualmente, ou calcule na aba Cálculo de Rotas e use o botão de copiar.</li>
+          <li>Em <span class="ui">Produtos a transportar</span>, clique em <span class="ui">Adicionar produto</span> e preencha quantidade, descrição e valor de cada item. O <span class="ui">Valor cotado</span> é somado automaticamente.</li>
+          <li>Escolha <span class="ui">Tipo de Veículo</span>, <span class="ui">Tipo de Serviço</span> e <span class="ui">Tipo de carga</span>, e informe <span class="ui">Peso</span>, <span class="ui">Volume</span> e <span class="ui">Prazo</span>.</li>
+          <li>Defina <span class="ui">Validade do orçamento</span>, <span class="ui">Status Orçamento</span>, <span class="ui">Status de Entrega</span> e o <span class="ui">Responsável</span>.</li>
+          <li>Em <span class="ui">Desmontagem de móveis</span>, <span class="ui">Fornecimento de embalagem</span> e <span class="ui">Mão de obra</span>, escolha o que está incluso — isso aparece nas notas gerais da proposta impressa.</li>
+          <li>Complete com <span class="ui">Observações</span>, se necessário, e clique em <span class="ui">Salvar orçamento</span>.</li>
+        </ol>
+        <p>Para começar de novo do zero antes de salvar, use <span class="ui">Limpar formulário</span> — ele também libera o número reservado pra ser usado no próximo orçamento.</p>
+
+        <h3>Gerar a proposta comercial</h3>
+        <ol>
+          <li>Com o formulário preenchido, clique em <span class="ui">Visualizar proposta comercial</span>.</li>
+          <li>Confira os dados na pré-visualização e clique em <span class="ui">Imprimir proposta</span> para gerar o PDF pelo navegador.</li>
+          <li>Use <span class="ui">Ocultar pré-visualização</span> para voltar ao formulário.</li>
+        </ol>
+
+        <h3>Consultar, filtrar e exportar</h3>
+        <ul>
+          <li>Na lista <strong>Orçamentos cadastrados</strong>, use os filtros por número, cliente, status ou intervalo de datas, e clique em <span class="ui">Aplicar filtros</span> (ou <span class="ui">Limpar filtros</span> para recomeçar).</li>
+          <li>Em cada linha, os ícones abrem a proposta (🔍 Visualizar), abrem para edição (✎ Editar) ou removem o registro (🗑 Excluir).</li>
+          <li><span class="ui">Exportar JSON</span> baixa todos os orçamentos em um arquivo de dados; o botão com o ícone do Excel, ao lado, baixa a mesma lista em uma planilha pronta pra abrir.</li>
+        </ul>
+        <p><span class="badge-admin">administrador</span> Os cartões <strong>Valor total cotado</strong> e <strong>Ticket médio</strong> ficam ocultos (••••) até você clicar no ícone de olho ao lado de cada um.</p>
+      </section>
+
+      <section class="card">
+        <h2>3. Cálculo de Rotas</h2>
+        <p>Calcula a distância rodoviária entre duas cidades e mostra o trajeto no mapa.</p>
+        <ol>
+          <li>Digite a cidade de origem no campo <span class="ui">Origem</span> e escolha uma sugestão da lista.</li>
+          <li>Repita para <span class="ui">Destino</span>. Use o botão de inverter (⇅) se quiser trocar origem e destino de lugar.</li>
+          <li>Clique em <span class="ui">Calcular</span> — a distância aparece no card Resumo da Rota e o trajeto é desenhado no mapa.</li>
+          <li>Clique em <span class="ui">Copiar distância</span> para levar o valor direto ao campo <span class="ui">Distância (km)</span> da aba Orçamentos.</li>
+        </ol>
+      </section>
+
+      <section class="card">
+        <h2>4. Cadastro</h2>
+        <p>Escolha o tipo de cadastro no seletor <span class="ui">Módulo Cadastro</span>, no topo da aba.</p>
+        <table class="overview">
+          <tr><th>Módulo</th><th>Para que serve</th></tr>
+          <tr><td>Cadastro de Clientes</td><td>Empresas e pessoas que recebem orçamentos.</td></tr>
+          <tr><td>Cadastro de Responsáveis</td><td>Quem usa o sistema (login e dados de contato).</td></tr>
+          <tr><td>Cadastro de Motoristas</td><td>Motoristas vinculados aos veículos da frota.</td></tr>
+          <tr><td>Cadastro de Veículos</td><td>Veículos disponíveis para os serviços.</td></tr>
+          <tr><td>Cadastro de Tipos de Serviço</td><td>Categorias de serviço oferecidas.</td></tr>
+        </table>
+        <p>Em qualquer módulo, o fluxo é o mesmo: preencha o formulário, clique em <span class="ui">Salvar</span>, e o registro aparece na tabela abaixo com opções de <span class="ui">Editar</span> e <span class="ui">Excluir</span>.</p>
+
+        <h3>Responsáveis</h3>
+        <ul>
+          <li>Cada responsável só vê e edita o próprio cadastro (tela <strong>Meu Cadastro</strong>) — o campo <span class="ui">Senha de acesso</span> ali é como você troca a própria senha.</li>
+          <li>RG, Telefone e E-mail ficam ocultos (••••••) na tabela por padrão — clique no ícone de lupa na linha da pessoa para revelar temporariamente.</li>
+        </ul>
+        <p><span class="badge-admin">administrador</span> Você vê e edita o cadastro de todo mundo, e tem uma coluna extra <strong>Status</strong> mostrando quem está 🟢 online agora, 🕓 visto há alguns minutos ou ⚪ offline.</p>
+      </section>
+
+      <section class="card">
+        <h2>5. Financeiro</h2>
+        <p>Controle de despesas da operação, organizado nos módulos do seletor <span class="ui">Módulo Financeiro</span>.</p>
+        <h3>Lançar uma despesa</h3>
+        <ol>
+          <li>Em <span class="ui">Lançamento de Despesas</span>, preencha data, competência, tipo (fixa ou variável), categoria, centro de custo e fornecedor.</li>
+          <li>Descreva a despesa e informe o <span class="ui">Valor</span>, a <span class="ui">Forma de Pagamento</span> e a <span class="ui">Situação</span>.</li>
+          <li>Se a despesa estiver ligada a um orçamento, cliente, veículo ou motorista específico, selecione nos campos correspondentes.</li>
+          <li>Clique em <span class="ui">Salvar despesa</span>.</li>
+        </ol>
+        <p><strong>Categorias de Despesas</strong>, <strong>Formas de Pagamento</strong> e <strong>Centros de Custo</strong> são pequenos cadastros de apoio — cadastre-os antes de precisar deles no lançamento de despesas.</p>
+      </section>
+
+      <section class="card">
+        <h2>6. Gráficos</h2>
+        <p>Seis relatórios visuais sobre os orçamentos e as despesas cadastradas.</p>
+        <table class="overview">
+          <tr><th>Gráfico</th><th>O que mostra</th></tr>
+          <tr><td>Orçamentos por mês</td><td>Quantidade de orçamentos ao longo do tempo.</td></tr>
+          <tr><td>Funil de status</td><td>Quantos orçamentos estão em cada status.</td></tr>
+          <tr><td>Taxa de conversão por responsável</td><td>Percentual de orçamentos aprovados/contratados por pessoa.</td></tr>
+          <tr><td>Orçamentos por responsável</td><td>Volume de orçamentos por pessoa.</td></tr>
+          <tr><td>Despesas por categoria e centro de custo</td><td>Para onde está indo o gasto da operação.</td></tr>
+          <tr><td>Orçamentos por estado</td><td>Mapa do Brasil colorido pelo volume de origem/destino.</td></tr>
+        </table>
+        <ul>
+          <li>Cada gráfico tem seu próprio filtro de mês/ano; o controle global, no topo da aba, aplica o mesmo período a todos de uma vez.</li>
+          <li>No gráfico <strong>Orçamentos por mês</strong>, clique numa barra para abrir a lista de Orçamentos já filtrada por aquele mês. No <strong>Funil de status</strong>, clique numa linha para filtrar por aquele status.</li>
+          <li>O gráfico <strong>Orçamentos por responsável</strong> tem um filtro extra de status.</li>
+          <li>Cada card tem um botão <span class="ui">Gerar PDF</span> para exportar aquele gráfico específico, e um link <span class="ui">Ver dados em tabela</span> com os números exatos.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>7. Recursos gerais</h2>
+        <h3>Quem está logado, e como sair</h3>
+        <p>No canto superior esquerdo, o chip <span class="ui">Logado</span> mostra seu nome de usuário (com o selo <span class="badge-admin">administrador</span> ao lado, se for o seu caso) e o botão <span class="ui">Sair</span>, que encerra a sessão.</p>
+        <h3>Sobre o Sistema</h3>
+        <p>O botão <span class="ui">Sobre o Sistema</span>, no canto superior direito, abre um painel com a versão atual e o histórico de tudo que já mudou no sistema.</p>
+        <h3>Usando pelo celular</h3>
+        <p>Em telas estreitas, o menu lateral fica escondido — toque no ícone <span class="ui">☰</span>, no canto inferior, para abrir ou fechar a navegação entre as abas.</p>
+        <p><span class="badge-admin">administrador</span> O sino 🔔, ao lado de "Sobre o Sistema", avisa sobre uma nova versão do sistema e pedidos de redefinição de senha pendentes.</p>
+      </section>
+    </div>
     </main>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="version.js"></script>
   <script src="app.js"></script>
 </body>

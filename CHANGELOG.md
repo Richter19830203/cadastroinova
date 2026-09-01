@@ -6,6 +6,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e o versionamento segue [Semantic Versioning](https://semver.org/lang/pt-BR/)
 (MAJOR.MINOR.PATCH).
 
+## [1.8.0] - 2026-09-01
+
+- Novo botão "Exportar Excel" na aba Orçamento, ao lado do Exportar JSON — gera uma planilha .xlsx de verdade com todos os orçamentos, em colunas legíveis
+- Nova aba "Manual de Uso" na barra lateral, abaixo de Gráficos, com o passo a passo de todo o sistema e um botão "Baixar PDF"
+
 ## [1.7.0] - 2026-08-27
 
 - Nova conta de administrador própria, separada do usuário INOVA — reconhecimento de admin agora é por cargo, não mais pelo nome fixo

@@ -39,16 +39,20 @@
     const LOGIN_MODO_LOCAL_KEY = "inova_login_modo_local";
     const MODO_LOCAL_ARQUIVO = window.location.protocol === "file:";
 
+    const hero = document.querySelector(".hero");
     const tabOrcamentos = document.getElementById("tab-orcamentos");
     const tabCalculoRotas = document.getElementById("tab-calculo-rotas");
     const tabCadastro = document.getElementById("tab-cadastro");
     const tabFinanceiro = document.getElementById("tab-financeiro");
     const tabGraficos = document.getElementById("tab-graficos");
+    const tabManual = document.getElementById("tab-manual");
     const painelOrcamentos = document.getElementById("painel-orcamentos");
     const painelCalculoRotas = document.getElementById("painel-calculo-rotas");
     const painelCadastro = document.getElementById("painel-cadastro");
     const painelFinanceiro = document.getElementById("painel-financeiro");
     const painelGraficos = document.getElementById("painel-graficos");
+    const painelManual = document.getElementById("painel-manual");
+    const manualBaixarPdfButton = document.getElementById("manual-baixar-pdf");
     const cadastroTipoSeletor = document.getElementById("cadastroTipoSeletor");
     const cadastroConteudoClientes = document.getElementById("cadastro-conteudo-clientes");
     const cadastroConteudoResponsaveis = document.getElementById("cadastro-conteudo-responsaveis");
@@ -102,6 +106,7 @@
     const revelarTicketMedioBtn = document.getElementById("revelar-ticket-medio");
     const clearButton = document.getElementById("limpar-formulario");
     const exportButton = document.getElementById("exportar-json");
+    const exportExcelButton = document.getElementById("exportar-excel");
     const listaClientesOrcamento = document.getElementById("lista-clientes-orcamento");
     const visualizarPropostaButton = document.getElementById("visualizar-proposta");
     const imprimirPropostaButton = document.getElementById("imprimir-proposta");
@@ -425,21 +430,27 @@
       const mostrarCadastro = aba === "cadastro";
       const mostrarFinanceiro = aba === "financeiro";
       const mostrarGraficos = aba === "graficos";
+      const mostrarManual = aba === "manual";
+      hero.hidden = mostrarManual;
+      hero.style.display = mostrarManual ? "none" : "";
       painelOrcamentos.classList.toggle("active", mostrarOrcamentos);
       painelCalculoRotas.classList.toggle("active", mostrarCalculoRotas);
       painelCadastro.classList.toggle("active", mostrarCadastro);
       painelFinanceiro.classList.toggle("active", mostrarFinanceiro);
       painelGraficos.classList.toggle("active", mostrarGraficos);
+      painelManual.classList.toggle("active", mostrarManual);
       tabOrcamentos.classList.toggle("active", mostrarOrcamentos);
       tabCalculoRotas.classList.toggle("active", mostrarCalculoRotas);
       tabCadastro.classList.toggle("active", mostrarCadastro);
       tabFinanceiro.classList.toggle("active", mostrarFinanceiro);
       tabGraficos.classList.toggle("active", mostrarGraficos);
+      tabManual.classList.toggle("active", mostrarManual);
       tabOrcamentos.setAttribute("aria-selected", String(mostrarOrcamentos));
       tabCalculoRotas.setAttribute("aria-selected", String(mostrarCalculoRotas));
       tabCadastro.setAttribute("aria-selected", String(mostrarCadastro));
       tabFinanceiro.setAttribute("aria-selected", String(mostrarFinanceiro));
       tabGraficos.setAttribute("aria-selected", String(mostrarGraficos));
+      tabManual.setAttribute("aria-selected", String(mostrarManual));
 
       if (mostrarCalculoRotas) {
         inicializarMapaRota();
@@ -3335,6 +3346,10 @@
       abrirAbaGraficos();
     });
 
+    tabManual.addEventListener("click", () => {
+      alternarAba("manual");
+    });
+
     cadastroTipoSeletor.addEventListener("change", () => {
       alternarModuloCadastro(cadastroTipoSeletor.value);
     });
@@ -4390,6 +4405,46 @@
       mostrarMensagem("Arquivo JSON exportado com sucesso.");
     });
 
+    exportExcelButton.addEventListener("click", () => {
+      const lista = obterOrcamentos();
+      if (lista.length === 0) {
+        mostrarMensagem("Não há orçamentos para exportar.", "error");
+        return;
+      }
+
+      const linhas = lista.map((o) => ({
+        "Código": o.codigo || "",
+        "Nº": o.numero || "",
+        "Data": o.criadoEm ? formatarDataIso(o.criadoEm) : "",
+        "Cliente": o.cliente || "",
+        "A/C": o.aC || "",
+        "Contato": o.contato || "",
+        "Origem": o.origem || "",
+        "UF Origem": o.origemUF || "",
+        "Destino": o.destino || "",
+        "UF Destino": o.destinoUF || "",
+        "Distância (km)": o.distancia || "",
+        "Tipo de Veículo": o.tipoVeiculo || "",
+        "Tipo de Serviço": o.tipoServicoDescricao || "",
+        "Tipo de Carga": o.tipoCarga || "",
+        "Peso (kg)": o.peso || "",
+        "Volume (m³)": o.volume || "",
+        "Prazo (dias)": o.prazo || "",
+        "Valor (R$)": Number(o.valor) || 0,
+        "Validade": o.validade || "",
+        "Status Orçamento": o.statusOrcamento || "",
+        "Status Entrega": o.statusEntrega || "",
+        "Responsável": o.responsavel || "",
+        "Observações": o.observacoes || ""
+      }));
+
+      const planilha = XLSX.utils.json_to_sheet(linhas);
+      const livro = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(livro, planilha, "Orçamentos");
+      XLSX.writeFile(livro, `orcamentos-inova-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      mostrarMensagem("Arquivo Excel exportado com sucesso.");
+    });
+
     aplicarFiltrosButton.addEventListener("click", () => {
       filtrosAtivos.numeroOrcamento = filtroNumeroOrcamento.value.trim();
       filtrosAtivos.cliente = filtroCliente.value.trim();
@@ -5040,6 +5095,19 @@
       window.print();
       setTimeout(limpar, 500);
     }
+
+    function manualGerarPdf() {
+      document.body.classList.add("imprimindo-manual");
+      const limpar = () => {
+        document.body.classList.remove("imprimindo-manual");
+        window.removeEventListener("afterprint", limpar);
+      };
+      window.addEventListener("afterprint", limpar);
+      window.print();
+      setTimeout(limpar, 500);
+    }
+
+    manualBaixarPdfButton.addEventListener("click", manualGerarPdf);
 
     function abrirAbaGraficos() {
       if (!grafInicializado) {
